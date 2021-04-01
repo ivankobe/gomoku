@@ -1,43 +1,47 @@
 package logic;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
+
+import util.Pair;
 
 public class GameState {
 	
-	private enum StoneColor {
+	public enum StoneColor {
 		BLACK, WHITE, EMPTY;
 	}
 	
-	private enum Winner {
+	public enum Winner {
 		BLACK, WHITE, NONE;
 	}
 	
-	private enum ToPlay {
-		BLACK, WHITE, NONE;
+	public enum Player {
+		BLACK, WHITE;
 	}
 	
-	private ToPlay otherPlayer (ToPlay player) {
-		if (player == ToPlay.BLACK) {return ToPlay.WHITE;}
-		else {return ToPlay.BLACK;}
+	private Player otherPlayer (Player player) {
+		if (player == Player.BLACK) {return Player.WHITE;}
+		else {return Player.BLACK;}
 	}
 	
 	
-	private final int size;
-	private Map<Point, StoneColor> fields;
-	private Winner winner;
-	private ToPlay toPlay;
+	public final int size;
+	public Map<Point, StoneColor> fields;
+	public Winner winner;
+	public Player toPlay;
+	public LinkedList<Pair<Point,Player>> stones;
 	
 	public GameState (int size) {
 		this.size = size;
 		fields = new HashMap<Point, StoneColor>();
 		this.populateBoard();
 		winner = Winner.NONE;
-		toPlay = ToPlay.BLACK;
+		toPlay = Player.BLACK;
+		stones = new LinkedList<Pair<Point,Player>>();
 	}
 	
 	private void populateBoard () {
@@ -61,7 +65,7 @@ public class GameState {
 	}
 	
 	public List<Point> validMoves () {
-		List<Point> points = new LinkedList<Point>();
+		List<Point> points = new ArrayList<Point>();
 		for (Map.Entry<Point, StoneColor> field : fields.entrySet()) {
 			if (field.getValue() == StoneColor.EMPTY) {
 				points.add(field.getKey());
@@ -72,7 +76,7 @@ public class GameState {
 	
 	private boolean moveIsWinning (Point p) {
 		StoneColor color;
-		if (toPlay == ToPlay.BLACK) {color = StoneColor.BLACK;}
+		if (toPlay == Player.BLACK) {color = StoneColor.BLACK;}
 		else {color = StoneColor.WHITE;}
 		int x = p.getX();
 		int y = p.getY();
@@ -147,27 +151,40 @@ public class GameState {
 	
 	private void placeStone (Point p) {
 		StoneColor stone;
-		if (toPlay == ToPlay.BLACK) {stone = StoneColor.BLACK;}
+		if (toPlay == Player.BLACK) {stone = StoneColor.BLACK;}
 		else {stone = StoneColor.WHITE;}
 		fields.put(p, stone);
+		stones.addFirst(new Pair<Point,Player>(p,toPlay));
 	}
 	
-	public boolean play (int n, int m) {
-		Point p = new Point(n,m);
+	public boolean play (Point p) {
 		if (moveIsValid(p)) {
 			placeStone(p);
 			if (moveIsWinning(p)) {
 				Winner w;
-				if (toPlay == ToPlay.BLACK) {w = Winner.BLACK;}
+				if (toPlay == Player.BLACK) {w = Winner.BLACK;}
 				else {w = Winner.WHITE;}
-				this.winner = w;
-				toPlay = ToPlay.NONE;
+				winner = w;
+				toPlay = null;
 			} else {
 				toPlay = otherPlayer(toPlay);			
 			}
 			return true;
 		}
 		else {return false;}
+	}
+	
+	public boolean undo (Player pl) {
+		if (pl == toPlay) {
+			if (stones.size() < 2) {return false;}
+			else {stones.pop(); stones.pop();}
+		}
+		else {
+			if (stones.size() < 1) {return false;}
+			else {stones.pop(); toPlay = otherPlayer(toPlay);}
+
+		}
+		return true;
 	}
 	
 	
