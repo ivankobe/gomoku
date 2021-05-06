@@ -17,10 +17,13 @@ public class ThreatSearch {
     // a bitwise operator that does modify the object it is performed on.
     // On the other hand, and(b1, b2) doesn't modify its arguments.
     // The method returns a set of starting (left-most) indexes of five-stone strings.
+
     public Set<Integer> getFives(BitSet b) {
+
         // Search horisontally (1), on the diagonal(14) and on the
         // off-diagonal (16). Search will utilise the shift-left
         // operator.
+        
         int[] inc = {1,14,16};
         Set<Integer> fives = new HashSet<Integer>();
         for (int i : inc) {
@@ -42,11 +45,16 @@ public class ThreatSearch {
 
             // Filter out continuous set strings of length > 5.
             int pos = 0;
+            // Iterate throug set bits.
             while (true) {
                 pos = tempB.nextSetBit(pos);
+                // If there are no set bit left, break.
                 if (pos == -1) {
                     break;
                 }
+                // Check if the set bit is isolated or if is a part of a thread of lenght >= 2.
+                // In the first case, add it to the set of 5-strings, in the second case,
+                // clear the whole thread.
                 if (tempB.get(pos + i)) {
                     int k = 2;
                     tempB.clear(pos + i);
