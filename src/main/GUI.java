@@ -14,6 +14,7 @@ import java.awt.event.MouseMotionListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
 import main.Game.Player;
@@ -38,6 +39,8 @@ public class GUI {
 
 @SuppressWarnings("serial")
 class Okno extends JFrame implements ActionListener {
+	
+	// MARK: - State
 
 	private Platno platno;
 
@@ -48,24 +51,65 @@ class Okno extends JFrame implements ActionListener {
 
 		this.setTitle("Gomoku");
 		this.setLayout(new BorderLayout());
+		
+		/**
+		 * The layout of the app is first split into two sections:
+		 *  - the left one contains the game,
+		 *  - the right one contains game state and settings.
+		 *  
+		 * The right section is then further split into multiple sections
+		 * that allow players to customize the game. 
+		 */
+		JPanel main = new JPanel();
+		main.setLayout(new BoxLayout(main, BoxLayout.X_AXIS));		
 
+		/**
+		 * We start with a preconfigured game when the user opens
+		 * the GUI. Then, they may configure it and restart.
+		 */
 		// Game
+		Platno platno = new Platno(new Game(Player.Black));
+		
+		main.add(platno);
+		this.platno = platno;
+		
+		// Options
+		JPanel options = new JPanel();
+		options.setLayout(new BoxLayout(options, BoxLayout.Y_AXIS));
+		
+		
+
+		// Complete
+		this.add(main, BorderLayout.CENTER);
+	}
+	
+
+	// MARK: - Methods
+	
+	private void start() {
+		// Create a new game.
 		Game game = new Game(Player.Black);
-
-		this.platno = new Platno(game);
-
-		this.add(platno, BorderLayout.CENTER);
-
-//		JPanel gumbi = new JPanel();
-//		add(gumbi, BorderLayout.NORTH);
+				
+		// Construct a new view.
+		this.platno = new Platno(game); 
+		this.repaint();
 	}
 
-//	private JButton dodajGumb(JPanel panel, String napis) {
-//		JButton gumb = new JButton(napis);
-//		gumb.addActionListener(this);
-//		panel.add(gumb);
-//		return gumb;
-//	}
+	/**
+	 * Adds a new button to the panel with a given label.
+	 * 
+	 * @param panel
+	 * @param label
+	 * @return
+	 */
+	private JButton button(JPanel panel, String label) {
+		JButton button = new JButton(label);
+
+		button.addActionListener(this);
+		panel.add(button);
+
+		return button;
+	}
 
 	// MARK: - Events
 
@@ -105,6 +149,9 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 	 */
 	private Integer active;
 
+	private Color black;
+	private Color white;
+
 	// MARK: - Constructor
 
 	public Platno(Game game) {
@@ -112,6 +159,9 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 
 		// State
 		this.game = game;
+
+		this.black = Color.BLACK;
+		this.white = Color.WHITE;
 
 		// Size
 		this.setPreferredSize(new Dimension(400, 800));
@@ -144,17 +194,15 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 				int r = 3;
 
 				switch (this.game.field(n)) {
-				case White: {
-					g.setColor(Color.WHITE);
+				case White:
+					g.setColor(this.white);
 					r = 10;
 					break;
-				}
-				case Black: {
-					g.setColor(Color.BLACK);
+				case Black:
+					g.setColor(this.black);
 					r = 10;
 					break;
-				}
-				case EMPTY: {
+				case EMPTY:
 					if (this.active == null || this.active != n) {
 						g.setColor(Color.DARK_GRAY);
 						break;
@@ -165,12 +213,11 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 
 					switch (this.game.player()) {
 					case White:
-						g.setColor(Color.WHITE);
+						g.setColor(this.white);
 						break;
 					case Black:
-						g.setColor(Color.DARK_GRAY);
+						g.setColor(this.black);
 					}
-				}
 				}
 
 				// Draw a stone.
@@ -204,7 +251,7 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 		// Input Data
 		int x = e.getX();
 		int y = e.getY();
-	
+
 		// Stones
 		int stones = this.game.size() * this.game.size();
 
@@ -212,7 +259,6 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 			if (!this.game.isValidMove(n))
 				continue;
 
-			
 			/**
 			 * We draw each stone to the center of their xy-coordinates. Then, based on the
 			 * type of the stone, we change the radius and the color of the stone.
@@ -223,8 +269,6 @@ class Platno extends JPanel implements MouseListener, MouseMotionListener {
 				this.active = n;
 			}
 		}
-
-		
 
 		// Redraw the canvas.
 		this.repaint();

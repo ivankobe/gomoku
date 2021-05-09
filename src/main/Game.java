@@ -14,14 +14,15 @@ public class Game {
 	private BitSet empties;
 
 	private ThreatSearch ts;
-	
+
 	/**
 	 * Number of stones in a row and column.
 	 */
 	private int size;
-	
+
 	/**
 	 * Returns the size of the board.
+	 * 
 	 * @return
 	 */
 	public int size() {
@@ -74,6 +75,8 @@ public class Game {
 		this.whites = new BitSet(225);
 		this.empties = new BitSet(225);
 		
+		this.ts = new ThreatSearch();
+
 		this.size = 15;
 
 		empties.set(0, 225); // bb and bw are initially empty, be is initially full.
@@ -105,13 +108,12 @@ public class Game {
 	}
 
 	/**
-	 * Tells whether a move is valid. A move is valid if the
-	 * field is still empty.
+	 * Tells whether a move is valid. A move is valid if the field is still empty.
 	 * 
 	 * @return A boolean whether the move is valid.
 	 */
 	public boolean isValidMove(int n) {
-		return empties.get(n);
+		return this.validMoves().get(n);
 	}
 
 	/**
@@ -120,7 +122,12 @@ public class Game {
 	 * @return A list of valid moves.
 	 */
 	public BitSet validMoves() {
-		return empties;
+		switch (this.state()) {
+		case IN_PROGRESS:
+			return empties;
+		default:
+			return new BitSet(225);
+		}
 	}
 
 	// MARK: - Play
