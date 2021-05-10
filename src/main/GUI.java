@@ -68,7 +68,7 @@ class Okno extends JFrame implements ActionListener {
 		 * the GUI. Then, they may configure it and restart.
 		 */
 		// Game
-		Platno platno = new Platno(new Game(Player.Black));
+		Platno platno = new Platno(new Game());
 		
 		main.add(platno);
 		this.platno = platno;
@@ -88,7 +88,7 @@ class Okno extends JFrame implements ActionListener {
 	
 	private void start() {
 		// Create a new game.
-		Game game = new Game(Player.Black);
+		Game game = new Game();
 				
 		// Construct a new view.
 		this.platno = new Platno(game); 

@@ -14,7 +14,7 @@ import main.Game.Player;
 public class Evaluator {
     /**
      * ! Doesn't work for sizes different than 15x15.
-     * TODO: A big chunk of code is repeated multiple times. Pack it in a method.
+     * TODO: A big chunk of code is repeated multiple times in search functions. Pack it in a method.
      */
 
     // MARK: - static fields (statically pre-computed bitmasks)
