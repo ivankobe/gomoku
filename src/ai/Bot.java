@@ -1,6 +1,8 @@
 package ai;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
@@ -12,16 +14,8 @@ import main.Game.Player;
 
 public class Bot {
     /**
-     * TODO: speed things up (iterative deepening, alpha-beta, sorting of candidates)
-     * TODO: modify the weights, because it seems that it doesn't really want to form fours or broken threes that much :)
+     * TODO: speed things up (iterative deepening and candidates' sorting)
      */
-
-
-    /**
-     * Search depth. A hard-coded value. If iterative deepening will be implementet,
-     * we can use time-restrictions instead of depth-restrictions.
-     */
-    private static final int DEPTH = 2; 
 
     /**
      * A transposition table to store static evaluations of already
@@ -30,6 +24,9 @@ public class Bot {
      * of moves) more than once. 
      */
     private Map<Long, Integer> transpositionTable;
+
+    // Maximum search depth for minimax
+    private int DEPTH = 2;
 
     // MARK: - constructor
 
@@ -58,24 +55,30 @@ public class Bot {
             return this.eval;
         }
     } 
-
+    
     /**
-     * Implementation of the basic minimax algorithm.
+     * Minimax with alpha-beta pruning to cut off unreachable branches.
      * 
      * @param game
-     * @param depth
-     * @param player
+     * @param candidates The list of candidates for bestMove. To be initialized as game.candidates()
+     * @param depth It is a depth-bounded algorithm
+     * @param alpha To be initialized as negative infinity
+     * @param beta To be initialized as positive infinity
+     * @param player Whether it is a minimizing or a maximizing branch. To be initialized as game.toplay()
      * @return
      */
-    private evaluatedMove minimax(Game game, int depth, Player player) {
-        evaluatedMove bestMove = null;
+    private evaluatedMove minimaxAB(Game game, int depth, Integer alpha, Integer beta, Player player) {
+        // If @player is the maximizer, the starting maxEval is negative "infinity",
+        // and if @player is the minimizer, the starting maxEval is "negative infinity". 
+        Integer maxEval = (game.player() == player) ? - Integer.MAX_VALUE : Integer.MAX_VALUE; 
         // Search only moves that are not too far from stones that are already on the board
         Set<Integer> candidates = game.candidates();
-        for (int mv : candidates) {
+        int bestMove = candidates.iterator().next(); // Retrieve *any* candidate
+        for (int move : candidates) {
             // Copy the game
             Game gameCopy = new Game(game);
             // Apply move
-            gameCopy.play(mv);
+            gameCopy.play(move);
             Integer eval;
             // If the node is terminal or maximum depth was reached, return static evaluation
             if (!(game.state() == GameState.IN_PROGRESS) || depth == 0) {
@@ -90,23 +93,41 @@ public class Bot {
                 }
             }
             else {
-                eval = minimax(gameCopy, depth - 1, player).eval();
+                eval = minimaxAB(gameCopy, depth - 1, alpha, beta, player).eval();
             }
-            if (
-                bestMove == null ||
-                (game.player() == player && eval > bestMove.eval()) ||
-                (game.player() != player && eval < bestMove.eval()) 
-            ) bestMove = new evaluatedMove(mv, eval);
+            // Maximizer
+            if (game.player() == player) {
+                if (eval > maxEval) {
+                    maxEval = eval;
+                    bestMove = move;
+                    alpha = Math.max(alpha, maxEval);
+                }
+            }
+            // Minimizer
+            else {
+                if (eval < maxEval) {
+                    maxEval = eval;
+                    bestMove = move;
+                    beta = Math.min(beta, maxEval);
+                }
+            }
+            // If position is unreachable, terminate loop and return
+            if (alpha >= beta)
+                return new evaluatedMove(bestMove, maxEval);
+
         }
-        return bestMove;
+        return new evaluatedMove(bestMove, maxEval);
     }
 
     /**
-     * Chooses a move in a given position.
+     * Chooses a move it can find in a given position.
+     * 
      * @param game
+     * @param depth As alpha-beta is a depth-bounded algorithm,
+     * we pass the argument specifying maximum search depth.
      * @return
      */
-    public int chooseMove(Game game) {
+    public int chooseMoveAB(Game game) {
         // Check that the gamestate is not terminal
         if (game.state() != GameState.IN_PROGRESS) {
             throw new IllegalArgumentException("Position is terminal. I cannot choose a move!");
@@ -121,14 +142,16 @@ public class Bot {
             };
             return center[rand.nextInt(center.length)];
         }
-        // Else, apply the minimax algorithm.
+        // Else, apply the minimax algorithm the the game.
         else {
-            return minimax(game, DEPTH, game.player()).move();
+            return minimaxAB(game, DEPTH, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
         }
     }
     
     /**
-     * A simple interface for testing purpouses
+     * A simple interface for testing purpouses.
+     * User input is two separate(!) integers. First is x-coordinate (couted left-right),
+     * second is y-coordinate (counted top-down). It does not check whether the move is legal.
      * 
      * @param args
      */
@@ -153,7 +176,7 @@ public class Bot {
             }
             else {
                 if (flag) {
-                    int move = bot.chooseMove(game);
+                    int move = bot.chooseMoveAB(game); // If depth were three, move-selection would take far longer than 5 seconds
                     game.play(move);
                     System.out.println(game);
                     flag = false;

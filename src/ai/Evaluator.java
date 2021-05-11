@@ -15,6 +15,7 @@ public class Evaluator {
     /**
      * ! Doesn't work for sizes different than 15x15.
      * TODO: A big chunk of code is repeated multiple times in search functions. Pack it in a method.
+     * TODO: Think about making the max candidates' distance 1 instead of 2  
      */
 
     // MARK: - static fields (statically pre-computed bitmasks)
@@ -101,13 +102,13 @@ public class Evaluator {
      */
     static {
         scores = new HashMap<String, Integer>();
-        scores.put("win", 1000);
+        scores.put("win", 10000);
         scores.put("draw", 0);
-        scores.put("live four", 500);
+        scores.put("live four", 5000);
         scores.put("dead four", 250);
         scores.put("broken three", 230);
         scores.put("open three", 220);
-        scores.put("closed three", 75);
+        scores.put("closed three", 30);
         scores.put("two", 1);
     }
 
