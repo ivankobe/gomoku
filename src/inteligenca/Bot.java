@@ -1,4 +1,4 @@
-package ai;
+package inteligenca;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,9 +8,9 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 
-import main.Game;
-import main.Game.GameState;
-import main.Game.Player;
+import logika.Igra;
+import logika.Igra.GameState;
+import logika.Igra.Player;
 
 public class Bot {
     /**
@@ -67,7 +67,7 @@ public class Bot {
      * @param player Whether it is a minimizing or a maximizing branch. To be initialized as game.toplay()
      * @return
      */
-    private evaluatedMove minimaxAB(Game game, int depth, Integer alpha, Integer beta, Player player) {
+    private evaluatedMove minimaxAB(Igra game, int depth, Integer alpha, Integer beta, Player player) {
         // If @player is the maximizer, the starting maxEval is negative "infinity",
         // and if @player is the minimizer, the starting maxEval is "negative infinity". 
         Integer maxEval = (game.player() == player) ? - Integer.MAX_VALUE : Integer.MAX_VALUE; 
@@ -76,7 +76,7 @@ public class Bot {
         int bestMove = candidates.iterator().next(); // Retrieve *any* candidate
         for (int move : candidates) {
             // Copy the game
-            Game gameCopy = new Game(game);
+            Igra gameCopy = new Igra(game);
             // Apply move
             gameCopy.play(move);
             Integer eval;
@@ -127,7 +127,7 @@ public class Bot {
      * we pass the argument specifying maximum search depth.
      * @return
      */
-    public int chooseMoveAB(Game game) {
+    public int chooseMoveAB(Igra game) {
         // Check that the gamestate is not terminal
         if (game.state() != GameState.IN_PROGRESS) {
             throw new IllegalArgumentException("Position is terminal. I cannot choose a move!");
@@ -156,7 +156,7 @@ public class Bot {
      * @param args
      */
     public static void main(String[] args) {
-        Game game = new Game();
+        Igra game = new Igra();
         Bot bot = new Bot();
         boolean flag = false;
         System.out.println(game);
