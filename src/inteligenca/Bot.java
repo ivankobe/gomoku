@@ -1,4 +1,4 @@
-package ai;
+package inteligenca;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,9 +8,9 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 
-import main.Game;
-import main.Game.GameState;
-import main.Game.Player;
+import logika.Igra;
+import logika.Igra.GameState;
+import logika.Igra.Player;
 
 public class Bot {
 
@@ -102,7 +102,7 @@ public class Bot {
      * @param player Whether it is a minimizing or a maximizing branch. To be initialized as game.toplay()
      * @return
      */
-    private evaluatedMove minimaxAB(Game game, int depth, Integer alpha, Integer beta, Player player) {
+    private evaluatedMove minimaxAB(Igra game, int depth, Integer alpha, Integer beta, Player player) {
         // Retrieve the appropriate transposition table
         Map<Long, Integer> transpositionTable = this.getTranspositionTable(player);
         // If @player is the maximizer, the starting maxEval is negative "infinity",
@@ -115,12 +115,12 @@ public class Bot {
         // Since, for evaluation of a child node, the game must be copied,
         // the copied games are stored in a map so as to avoid having to
         // copy each game twice
-        Map<Integer, Game> clonedGames = new HashMap<Integer, Game>();
+        Map<Integer, Igra> clonedGames = new HashMap<Integer, Igra>();
         // Evaluate each candidate
         for (int move : candidates) {
             // Copy the game
-            Game gameCopy = new Game(game);
-            // Play the candidate
+            Igra gameCopy = new Igra(game);
+            // Apply move
             gameCopy.play(move);
             // If this board was already evaluated, retrieve evaluation from table
             Integer staticEvaluation = transpositionTable.get(gameCopy.hash());
@@ -156,7 +156,7 @@ public class Bot {
         int bestMove = sorted.get(0);  // Start with the best candidate   
         for (int move : sorted) {
             // Retrieve the cloned game
-            Game clone = clonedGames.get(move);
+            Igra clone = clonedGames.get(move);
             Integer eval;
             // If position is terminal or maximum depth was reached, retrieve evaluation
             // from table. We can be sure that eval != null.
@@ -199,7 +199,7 @@ public class Bot {
      * we pass the argument specifying maximum search depth.
      * @return
      */
-    public int chooseMoveAB(Game game) {
+    public int chooseMoveAB(Igra game) {
         // Check that the gamestate is not terminal
         if (game.state() != GameState.IN_PROGRESS) {
             throw new IllegalArgumentException("Position is terminal. I cannot choose a move!");
@@ -228,7 +228,7 @@ public class Bot {
      * @param args
      */
     public static void main(String[] args) {
-        Game game = new Game();
+        Igra game = new Igra();
         Bot bot = new Bot();
         boolean flag = false;
         System.out.println(game);

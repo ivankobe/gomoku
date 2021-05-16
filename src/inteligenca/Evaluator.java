@@ -1,4 +1,4 @@
-package ai;
+package inteligenca;
 
 import static util.Util.getMask;
 import static util.Util.shl;
@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import main.Game;
-import main.Game.Player;
+import logika.Igra;
+import logika.Igra.Player;
 
 public class Evaluator {
     /**
@@ -114,7 +114,7 @@ public class Evaluator {
     /**
      * The Game whose position the Evaluator is to evaluate
      */
-    private Game game;
+    private Igra game;
 
     /**
      * Many different patterns contain the same subpatterns (namely the threes and
@@ -172,7 +172,7 @@ public class Evaluator {
 
     // MARK: - constructor
 
-    public Evaluator(Game game) {
+    public Evaluator(Igra game) {
         this.game = game;
         this.cachedThrees = new HashMap<Integer, BitSet>();
         this.cachedFours = new HashMap<Integer, BitSet>();
@@ -497,7 +497,7 @@ public class Evaluator {
     }
 
     public static void main(String[] args) {
-        Game game = new Game();
+        Igra game = new Igra();
         Evaluator e = new Evaluator(game);
         while (true) {
             Scanner in = new Scanner(System.in);

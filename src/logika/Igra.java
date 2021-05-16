@@ -1,4 +1,4 @@
-package main;
+package logika;
 
 import java.util.BitSet;
 import java.util.HashMap;
@@ -7,9 +7,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import controller.IGameInfo;
+import splosno.Koordinati;
+
 import static util.Util.*;
 
-public class Game {
+public class Igra implements IGameInfo {
 
 	// MARK: - State
 
@@ -17,29 +20,22 @@ public class Game {
 	private BitSet whites;
 	private BitSet empties;
 
-	/*
-	 * Public methods for safely retrieving bitboards (with cloning)
-	 */
-	public BitSet getBlacks() {
-		return (BitSet) this.blacks.clone();
-	}
-
-	public BitSet getWhites() {
-		return (BitSet) this.whites.clone();
-	}
-
-	public BitSet getEmpties() {
-		return (BitSet) this.empties.clone();
-	}
-
 	/**
 	 * Safely retrieve (the clone of) the bitboard representing the @player's stones
+	 * 
 	 * @param player
 	 * 
 	 * @return
 	 */
 	public BitSet getBoard(Player player) {
-		return (player == Player.Black) ? this.getBlacks() : this.getWhites();
+		if (player == Player.Black) {
+			return (BitSet) this.blacks.clone();
+		}
+		return (BitSet) this.whites.clone();
+	}
+
+	public BitSet getEmpties() {
+		return (BitSet) this.empties.clone();
 	}
 
 	/**
@@ -97,10 +93,10 @@ public class Game {
 	// Initialize masks
 	static {
 		masks = new HashMap<Integer, BitSet>();
-		int[] inc = {1, 14, 15, 16};
+		int[] inc = { 1, 14, 15, 16 };
 		for (int i : inc) {
 			masks.put(i, getMask(i, 5));
-		} 
+		}
 	}
 
 	// MARK: - hashmap
@@ -119,9 +115,8 @@ public class Game {
 		}
 
 		/**
-		 * Since we intend to use pairMovePlayer object as keys in
-		 * a HashMap, we have to override the hashCode() and
-		 * equals() methods.
+		 * Since we intend to use pairMovePlayer object as keys in a HashMap, we have to
+		 * override the hashCode() and equals() methods.
 		 */
 		@Override
 		public int hashCode() {
@@ -143,17 +138,15 @@ public class Game {
 	}
 
 	/**
-	 * Hashing is done incrementally using Zobrist's method. 
-	 * For each square on the board and for each player, an unsigned
-	 * 64-bit integer (long) is generated. Thus, to update the
-	 * game's hash, we simply XOR the last move's hash into it.
-	 * This ensures that the game's hash is determined solely by
-	 * the stones on the board and not by the order in which they were played.
-	 * Since @hashmap is a static field, all instances of the class Game, created
-	 * during the same session will calculate hash based on the same values.
-	 * ? Does GUI use multithreading?
-	 * ? If so, does each thread operate with its own @hashmap?
-	 * ? Does this produce collisions?
+	 * Hashing is done incrementally using Zobrist's method. For each square on the
+	 * board and for each player, an unsigned 64-bit integer (long) is generated.
+	 * Thus, to update the game's hash, we simply XOR the last move's hash into it.
+	 * This ensures that the game's hash is determined solely by the stones on the
+	 * board and not by the order in which they were played. Since @hashmap is a
+	 * static field, all instances of the class Game, created during the same
+	 * session will calculate hash based on the same values. ? Does GUI use
+	 * multithreading? ? If so, does each thread operate with its own @hashmap? ?
+	 * Does this produce collisions?
 	 */
 	private static final Map<pairMovePlayer, Long> hashmap;
 
@@ -171,13 +164,14 @@ public class Game {
 
 	/**
 	 * Sadly, we cannot override Object.hashCode() to implement Zobrist's method,
-	 * since it's return type is int instad of long. Thus, we store the game's
-	 * hash in a special field.
+	 * since it's return type is int instad of long. Thus, we store the game's hash
+	 * in a special field.
 	 */
 	private long hash;
 
 	/**
 	 * Returns the game's hash.
+	 * 
 	 * @return
 	 */
 	public long hash() {
@@ -187,18 +181,19 @@ public class Game {
 	// MARK: - candidates
 
 	/**
-	 * An additional data structure that thracks all empty fields on the board
-	 * whose distance (in any direction) to the nearest non-empty field is not
-	 * greater than two. @candidates are calculated incrementally. This is used
-	 * to cut down the branching factor in the game-tree.
-	 * ? Since this information is only needed for the ai, we should think about
-	 * ? restricting these computations to the cases when one of the players is a bot.
-	 * ? But since they are not very expensive, this is not so very important.
+	 * An additional data structure that thracks all empty fields on the board whose
+	 * distance (in any direction) to the nearest non-empty field is not greater
+	 * than two. @candidates are calculated incrementally. This is used to cut down
+	 * the branching factor in the game-tree. ? Since this information is only
+	 * needed for the ai, we should think about ? restricting these computations to
+	 * the cases when one of the players is a bot. ? But since they are not very
+	 * expensive, this is not so very important.
 	 */
 	private Set<Integer> candidates;
 
 	/**
 	 * Returns the set of candidates.
+	 * 
 	 * @return
 	 */
 	public Set<Integer> candidates() {
@@ -207,7 +202,7 @@ public class Game {
 
 	// MARK: - Constructor
 
-	public Game(Player starting, int size) {
+	public Igra(Player starting, int size) {
 		/**
 		 * The board is represented as a triplet of bitsets in order to make
 		 * pattern-recognition faster. - blacks is a bitset representing black stones -
@@ -218,7 +213,7 @@ public class Game {
 		this.blacks = new BitSet(225);
 		this.whites = new BitSet(225);
 		this.empties = new BitSet(225);
-		
+
 		this.size = 15;
 
 		empties.set(0, 225); // bb and bw are initially empty, be is initially full.
@@ -227,17 +222,17 @@ public class Game {
 
 		this.hash = 0;
 
-		this.candidates = new HashSet<Integer>(); 
+		this.candidates = new HashSet<Integer>();
 	}
 
-	public Game() {
+	public Igra() {
 		/**
 		 * By default, black is first to move and the board is 15x15.
 		 */
 		this.blacks = new BitSet(225);
 		this.whites = new BitSet(225);
 		this.empties = new BitSet(225);
-		
+
 		this.size = 15;
 
 		empties.set(0, 225); // bb and bw are initially empty, be is initially full.
@@ -246,30 +241,30 @@ public class Game {
 
 		this.hash = 0;
 
-		this.candidates = new HashSet<Integer>(); 
+		this.candidates = new HashSet<Integer>();
 	}
-	
-	public Game(Game game) {
+
+	public Igra(Igra game) {
 		/**
 		 * Constructor for cloning purposes
 		 */
-		this.blacks = game.getBlacks();
-		this.whites = game.getWhites();
-		this.empties = game.getEmpties();
-		
+		this.blacks = (BitSet) game.blacks.clone();
+		this.whites = (BitSet) game.whites.clone();
+		this.empties = (BitSet) game.empties.clone();
+
 		this.size = game.size();
-		
+
 		this.player = game.player();
-		
+
 		this.hash = game.hash();
-		
+
 		// It is important to clone the set
 		this.candidates = new HashSet<Integer>(game.candidates());
-	}	
+	}
 
 	// MARK: - Field
 
-	enum Field {
+	public enum Field {
 		Black, White, EMPTY;
 	}
 
@@ -296,7 +291,7 @@ public class Game {
 	 * @return A boolean whether the move is valid.
 	 */
 	public boolean isValidMove(int n) {
-		if (n >= 225 || n < 0) 
+		if (n >= 225 || n < 0)
 			return false;
 		else
 			return this.validMoves().get(n);
@@ -312,7 +307,7 @@ public class Game {
 		case IN_PROGRESS:
 			return empties;
 		default:
-			return new BitSet(225); //? Why?
+			return new BitSet(225); // ? Why? I get the idea ampak. . . why . not..?
 		}
 	}
 
@@ -325,35 +320,51 @@ public class Game {
 	 */
 	private void updateCandidates(int move) {
 		this.candidates.remove(move);
-		// Search two steps in all eight directions 
-        // Horisontally
-        int horD = move % 15; // Space in the decreasing (D) horisontal (hor) direction
-        if (horD > 0 & isValidMove(move - 1)) this.candidates.add(move - 1); 
-        if (horD > 1 & isValidMove(move - 2)) this.candidates.add(move - 2); 
-        int horI = 14 - horD;
-        if (horI > 0 & isValidMove(move + 1)) this.candidates.add(move + 1); 
-        if (horI > 1 & isValidMove(move + 2)) this.candidates.add(move + 2);
-        // Vertically
-        int verD = move / 15;
-        if (verD > 0 & isValidMove(move - 15)) this.candidates.add(move - 15); 
-        if (verD > 1 & isValidMove(move - 2 * 15)) this.candidates.add(move - 2 * 15);
-        int verI = 14 - verD;
-        if (verI > 0 & isValidMove(move + 15)) this.candidates.add(move + 15); 
-        if (verI > 1 & isValidMove(move + 2 * 15)) this.candidates.add(move + 2 * 15);
-        // On the diagonal
-        int diagD = Math.min(horI, verD);
-        if (diagD > 0 & isValidMove(move - 14)) this.candidates.add(move - 14); 
-        if (diagD > 1 & isValidMove(move - 2 * 14)) this.candidates.add(move - 2 * 14);
-        int diagI = Math.min(horD, verI);
-        if (diagI > 0 & isValidMove(move + 14)) this.candidates.add(move + 14); 
-        if (diagI > 1 & isValidMove(move + 2 * 14)) this.candidates.add(move + 2 * 14);
-        // On the counterdiagonal
-        int counterdiagD = Math.min(horD, verD);
-        if (counterdiagD > 0 & isValidMove(move - 16)) this.candidates.add(move - 16); 
-        if (counterdiagD > 1 & isValidMove(move - 2 * 16)) this.candidates.add(move - 2 * 16);
-        int counterdiagI = Math.min(horI, verI);
-        if (counterdiagI > 0 & isValidMove(move + 16)) this.candidates.add(move + 16); 
-        if (counterdiagI > 1 & isValidMove(move + 2 * 16)) this.candidates.add(move + 2 * 16);
+		// Search two steps in all eight directions
+		// Horisontally
+		int horD = move % 15; // Space in the decreasing (D) horisontal (hor) direction
+		if (horD > 0 & isValidMove(move - 1))
+			this.candidates.add(move - 1);
+		if (horD > 1 & isValidMove(move - 2))
+			this.candidates.add(move - 2);
+		int horI = 14 - horD;
+		if (horI > 0 & isValidMove(move + 1))
+			this.candidates.add(move + 1);
+		if (horI > 1 & isValidMove(move + 2))
+			this.candidates.add(move + 2);
+		// Vertically
+		int verD = move / 15;
+		if (verD > 0 & isValidMove(move - 15))
+			this.candidates.add(move - 15);
+		if (verD > 1 & isValidMove(move - 2 * 15))
+			this.candidates.add(move - 2 * 15);
+		int verI = 14 - verD;
+		if (verI > 0 & isValidMove(move + 15))
+			this.candidates.add(move + 15);
+		if (verI > 1 & isValidMove(move + 2 * 15))
+			this.candidates.add(move + 2 * 15);
+		// On the diagonal
+		int diagD = Math.min(horI, verD);
+		if (diagD > 0 & isValidMove(move - 14))
+			this.candidates.add(move - 14);
+		if (diagD > 1 & isValidMove(move - 2 * 14))
+			this.candidates.add(move - 2 * 14);
+		int diagI = Math.min(horD, verI);
+		if (diagI > 0 & isValidMove(move + 14))
+			this.candidates.add(move + 14);
+		if (diagI > 1 & isValidMove(move + 2 * 14))
+			this.candidates.add(move + 2 * 14);
+		// On the counterdiagonal
+		int counterdiagD = Math.min(horD, verD);
+		if (counterdiagD > 0 & isValidMove(move - 16))
+			this.candidates.add(move - 16);
+		if (counterdiagD > 1 & isValidMove(move - 2 * 16))
+			this.candidates.add(move - 2 * 16);
+		int counterdiagI = Math.min(horI, verI);
+		if (counterdiagI > 0 & isValidMove(move + 16))
+			this.candidates.add(move + 16);
+		if (counterdiagI > 1 & isValidMove(move + 2 * 16))
+			this.candidates.add(move + 2 * 16);
 	}
 
 	/**
@@ -364,20 +375,34 @@ public class Game {
 	public boolean play(int move) {
 		if (!this.isValidMove(move))
 			return false;
+
 		// Update the board.
 		if (this.player == Player.Black)
 			this.blacks.set(move);
 		else
 			this.whites.set(move);
+
 		// Clear the complement.
 		this.empties.clear(move);
 		// Update hash
 		this.hash = this.hash ^ hashmap.get(new pairMovePlayer(move, this.player()));
 		// Update candidates
 		this.updateCandidates(move);
+		
 		// Update the player.
 		this.player = this.player.next();
 		return true;
+	}
+	
+	/**
+	 * Places a stone on the board with the given coordinates
+	 * and tells whether the move is valid.
+	 * 
+	 * @param koordinati
+	 * @return
+	 */
+	public boolean odigraj(Koordinati koordinati) {
+		return this.play(koordinati.getX() + koordinati.getY() * this.size);
 	}
 
 	// MARK: - State
@@ -387,12 +412,27 @@ public class Game {
 	}
 
 	/**
+	 * Tells the state of the game.
+	 * 
+	 * @return Winner, draw or in_progress.
+	 */
+	public GameState state() {
+		if (this.hasWon(Player.Black))
+			return GameState.WIN_Black;
+		if (this.hasWon(Player.White))
+			return GameState.WIN_White;
+		if (empties.isEmpty())
+			return GameState.DRAW;
+		return GameState.IN_PROGRESS;
+	}
+	
+	/**
 	 * Checks whether the player has a continuous string of five or more set bits.
 	 * 
 	 * @return boolean
 	 */
 	private boolean hasWon(Player player) {
-		int[] inc = {1, 14, 15, 16}; // directions
+		int[] inc = { 1, 14, 15, 16 }; // directions
 		for (int i : inc) {
 			// Select the appropriate bitboard and clone it
 			BitSet stones = this.getBoard(player);
@@ -402,27 +442,19 @@ public class Game {
 			BitSet shifted3 = shl(shifted2, i);
 			BitSet shifted4 = shl(shifted3, i);
 			// AND all five boards togeather
-			stones.and(shifted1); stones.and(shifted2); stones.and(shifted3); stones.and(shifted4);
+			stones.and(shifted1);
+			stones.and(shifted2);
+			stones.and(shifted3);
+			stones.and(shifted4);
 			BitSet mask = masks.get(i); // Retrieve the appropriate mask
 			stones.and(mask); // Apply it
-			if (!stones.isEmpty()) return true;
+			if (!stones.isEmpty())
+				return true;
 		}
 		return false;
 	}
 
-	/**
-	 * Tells the state of the game.
-	 * 
-	 * @return Winner, draw or in_progress.
-	 */
-	public GameState state() {
-		if (hasWon(Player.Black)) return GameState.WIN_Black;
-		if (hasWon(Player.White)) return GameState.WIN_White;
-		if (empties.isEmpty()) return GameState.DRAW;
-		return GameState.IN_PROGRESS;
-	}
-
-	// MARK: - overrides
+	// MARK: - Overrides
 
 	@Override
     public String toString() {
@@ -438,7 +470,7 @@ public class Game {
 			}
 
 		}
-        return str;
+		return str;
 	}
 
 }
