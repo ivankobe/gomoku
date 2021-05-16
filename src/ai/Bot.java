@@ -13,29 +13,63 @@ import main.Game.GameState;
 import main.Game.Player;
 
 public class Bot {
+
     /**
-     * TODO: speed things up (iterative deepening and candidates' sorting)
+     * Since evaluation of non-terminal and terminal positions should be independent
+     * of each other, the latter are stored seperately.
      */
+    private static final Map<String, Integer> scores;
+
+    /**
+     * The scores for win and lose are symmetric. The score for draw is 0.
+     */
+    static {
+        scores = new HashMap<String, Integer>();
+        scores.put("win", 100000);
+        scores.put("lose", - 100000);
+        scores.put("draw", 0); 
+    }
+
 
     /**
      * A transposition table to store static evaluations of already
      * seen positions in. This way we prevent evaluating the same
      * position (at which one can arrive with different sequences
-     * of moves) more than once. 
+     * of moves) more than once. We need two transposition tables,
+     * once for when computer is playing black and one for when it is
+     * playing white. In a single game, a single table would suffice,
+     * since scores are always calculated for the same player, however,
+     * the same Bot object is meant to be used in several games (in
+     * order to accumulate as big transposition tables as possible).
      */
-    private Map<Long, Integer> transpositionTable;
+    private Map<Long, Integer> transpositionTableBlack;
+    private Map<Long, Integer> transpositionTableWhite;
 
-    // Maximum search depth for minimax
+
+    /**
+     * Retrieve the appropriate transposition table
+     * 
+     * @param player
+     * @return
+     */
+    private Map<Long, Integer> getTranspositionTable(Player player) {
+        return (player == Player.Black) ? this.transpositionTableBlack : this.transpositionTableWhite;
+    }
+
+    /**
+     * Since minimax is a depth-bounded algorithm, maximum search depth has to be specifyied
+     */
     private int DEPTH = 2;
 
     // MARK: - constructor
 
     public Bot() {
-        this.transpositionTable = new HashMap<Long, Integer>();
+        this.transpositionTableBlack = new HashMap<Long, Integer>();
+        this.transpositionTableWhite = new HashMap<Long, Integer>();
     }
 
     /**
-     * A custom class describing evaluated moves
+     * A custom class describing evaluated moves, basically a pair (move, evaluation)
      */
     class evaluatedMove {
 
@@ -57,10 +91,11 @@ public class Bot {
     } 
     
     /**
-     * Minimax with alpha-beta pruning to cut off unreachable branches.
+     * Minimax with alpha-beta pruning to cut off unreachable branches. At each
+     * step, candidates for next move are first evaluated and sorted. This should
+     * speed up the algorithm significantly.
      * 
      * @param game
-     * @param candidates The list of candidates for bestMove. To be initialized as game.candidates()
      * @param depth It is a depth-bounded algorithm
      * @param alpha To be initialized as negative infinity
      * @param beta To be initialized as positive infinity
@@ -68,32 +103,69 @@ public class Bot {
      * @return
      */
     private evaluatedMove minimaxAB(Game game, int depth, Integer alpha, Integer beta, Player player) {
+        // Retrieve the appropriate transposition table
+        Map<Long, Integer> transpositionTable = this.getTranspositionTable(player);
         // If @player is the maximizer, the starting maxEval is negative "infinity",
         // and if @player is the minimizer, the starting maxEval is "negative infinity". 
-        Integer maxEval = (game.player() == player) ? - Integer.MAX_VALUE : Integer.MAX_VALUE; 
-        // Search only moves that are not too far from stones that are already on the board
+        Integer maxEval = (game.player() == player) ? - Integer.MAX_VALUE : Integer.MAX_VALUE;
+        // Search only moves that are not too far from stones that are already on the board 
         Set<Integer> candidates = game.candidates();
-        int bestMove = candidates.iterator().next(); // Retrieve *any* candidate
+        // A map for storing the evaluations of child nodes
+        Map<Integer, Integer> evaluations = new HashMap<Integer, Integer>();
+        // Since, for evaluation of a child node, the game must be copied,
+        // the copied games are stored in a map so as to avoid having to
+        // copy each game twice
+        Map<Integer, Game> clonedGames = new HashMap<Integer, Game>();
+        // Evaluate each candidate
         for (int move : candidates) {
             // Copy the game
             Game gameCopy = new Game(game);
-            // Apply move
+            // Play the candidate
             gameCopy.play(move);
-            Integer eval;
-            // If the node is terminal or maximum depth was reached, return static evaluation
-            if (!(game.state() == GameState.IN_PROGRESS) || depth == 0) {
-                // If possible, retrieve value from transposition table
-                eval = this.transpositionTable.get(gameCopy.hash());
-                // If not, calculate static evaluation ...
-                if (eval == null) {
-                    Evaluator evaluator = new Evaluator(gameCopy);
-                    eval = evaluator.evaluate(player);
-                    // ... and store it in the table
-                    this.transpositionTable.put(gameCopy.hash(), eval);
+            // If this board was already evaluated, retrieve evaluation from table
+            Integer staticEvaluation = transpositionTable.get(gameCopy.hash());
+            // If not, calculate static evaluation and store it in the table for future reference 
+            if (staticEvaluation == null) {
+                GameState state = gameCopy.state();
+                if ((state == GameState.WIN_Black && player == Player.Black) ||
+                    (state == GameState.WIN_White && player == Player.White)) {
+                    staticEvaluation = scores.get("win");
                 }
+                else if ((state == GameState.WIN_Black && player == Player.White) ||
+                    (state == GameState.WIN_White && player == Player.Black)) {
+                    staticEvaluation = - scores.get("win");
+                }
+                else if (state == GameState.DRAW) {
+                    staticEvaluation = scores.get("draw");
+                }
+                else {
+                    Evaluator evaluator = new Evaluator(gameCopy);
+                    staticEvaluation = evaluator.evaluate(player);
+                }
+                transpositionTable.put(gameCopy.hash(), staticEvaluation);
             }
+            // Store the cloned game
+            clonedGames.put(move, gameCopy);
+            // Store the evaluation of child node
+            evaluations.put(move, staticEvaluation);
+        }
+        // Transform the set of candidates into a list (for sorting)
+        List<Integer> sorted = new ArrayList<Integer>(candidates);
+        // Sort the list
+        sorted.sort((x,y) -> evaluations.get(y).compareTo(evaluations.get(x))); // Yay, lambda expressions!
+        int bestMove = sorted.get(0);  // Start with the best candidate   
+        for (int move : sorted) {
+            // Retrieve the cloned game
+            Game clone = clonedGames.get(move);
+            Integer eval;
+            // If position is terminal or maximum depth was reached, retrieve evaluation
+            // from table. We can be sure that eval != null.
+            if (!(clone.state() == GameState.IN_PROGRESS) || depth == 0) {
+                eval = transpositionTable.get(clone.hash());
+            }
+            // Else, make a recursive call
             else {
-                eval = minimaxAB(gameCopy, depth - 1, alpha, beta, player).eval();
+                eval = minimaxAB(clone, depth - 1, alpha, beta, player).eval();
             }
             // Maximizer
             if (game.player() == player) {

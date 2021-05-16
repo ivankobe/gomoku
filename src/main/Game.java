@@ -17,7 +17,7 @@ public class Game {
 	private BitSet whites;
 	private BitSet empties;
 
-	/**
+	/*
 	 * Public methods for safely retrieving bitboards (with cloning)
 	 */
 	public BitSet getBlacks() {
@@ -426,12 +426,17 @@ public class Game {
 
 	@Override
     public String toString() {
-        String str = "";
+        String str = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 \n";   
+		int row = 0;
         for (int i = 0; i < 225; i++) {
             if (this.blacks.get(i)) str = str + "X ";
 			else if (this.whites.get(i)) str = str + "O ";
 			else str = str + "_ ";
-			if (i % 15 == 14) str = str + "\n";
+			if (i % 15 == 14) {
+				str = str + " " + String.valueOf(row) + "\n";
+				row++;
+			}
+
 		}
         return str;
 	}

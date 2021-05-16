@@ -15,7 +15,6 @@ public class Evaluator {
     /**
      * ! Doesn't work for sizes different than 15x15.
      * TODO: A big chunk of code is repeated multiple times in search functions. Pack it in a method.
-     * TODO: Think about making the max candidates' distance 1 instead of 2  
      */
 
     // MARK: - static fields (statically pre-computed bitmasks)
@@ -102,12 +101,10 @@ public class Evaluator {
      */
     static {
         scores = new HashMap<String, Integer>();
-        scores.put("win", 10000);
-        scores.put("draw", 0);
-        scores.put("live four", 5000);
-        scores.put("dead four", 250);
-        scores.put("broken three", 230);
-        scores.put("open three", 220);
+        scores.put("live four", 500);
+        scores.put("dead four", 500);
+        scores.put("broken three", 300);
+        scores.put("open three", 250);
         scores.put("closed three", 30);
         scores.put("two", 1);
     }
@@ -494,20 +491,9 @@ public class Evaluator {
      * positive, the position is favorable for the @player and vice versa.
      */
     public int evaluate(Player player) {
-        switch (this.game.state()) {
-            case WIN_Black:
-                if (player == Player.Black) return scores.get("win");
-                else return - scores.get("win");
-            case WIN_White:
-                if (player == Player.White) return scores.get("win");
-                else return - scores.get("win");
-            case DRAW:
-                return scores.get("draw");
-            default:
-                int plus = evaluateSingleSidedNonterminal(player);
-                int minus = evaluateSingleSidedNonterminal(player.next());
-                return plus - minus;
-        }
+        int plus = evaluateSingleSidedNonterminal(player);
+        int minus = evaluateSingleSidedNonterminal(player.next());
+        return plus - minus;
     }
 
     public static void main(String[] args) {
