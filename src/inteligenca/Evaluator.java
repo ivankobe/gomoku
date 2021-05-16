@@ -13,8 +13,7 @@ import logika.Igra.Player;
 
 public class Evaluator {
     /**
-     * ! Doesn't work for sizes different than 15x15.
-     * TODO: A big chunk of code is repeated multiple times in search functions. Pack it in a method.
+     * A class that provides static evaluation of a given position
      */
 
     // MARK: - static fields (statically pre-computed bitmasks)
@@ -101,12 +100,12 @@ public class Evaluator {
      */
     static {
         scores = new HashMap<String, Integer>();
-        scores.put("live four", 500);
-        scores.put("dead four", 500);
-        scores.put("broken three", 300);
-        scores.put("open three", 250);
-        scores.put("closed three", 30);
-        scores.put("two", 1);
+        scores.put("live four", 10000);
+        scores.put("open three", 5000);
+        scores.put("dead four", 1000);
+        scores.put("broken three", 1000);
+        scores.put("closed three", 200);
+        scores.put("two", 10);
     }
 
     // MARK: - dynamic fields
@@ -494,19 +493,6 @@ public class Evaluator {
         int plus = evaluateSingleSidedNonterminal(player);
         int minus = evaluateSingleSidedNonterminal(player.next());
         return plus - minus;
-    }
-
-    public static void main(String[] args) {
-        Igra game = new Igra();
-        Evaluator e = new Evaluator(game);
-        while (true) {
-            Scanner in = new Scanner(System.in);
-            int x = in.nextInt();
-            int y = in.nextInt();
-            game.play(x + 15 * y);
-            System.out.println(game);
-            System.out.println(e.evaluate());
-        }
     }
 
 }

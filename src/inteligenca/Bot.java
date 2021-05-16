@@ -13,6 +13,13 @@ import logika.Igra.GameState;
 import logika.Igra.Player;
 
 public class Bot {
+    /**
+     * Computer player.
+     * 
+     * TODO: reduce max distance of candidates from played stones from 2 to 1
+     * TODO: timing is a bit fuzzy, is it OK that it sometimes takes a few miliseconds more than 5000 for bot to choose a move?
+     * TODO: where should the bot play the second move? If the first move is in the corner, it should probably play in the center. 
+     */
 
     /**
      * Since evaluation of non-terminal and terminal positions should be independent
@@ -29,7 +36,6 @@ public class Bot {
         scores.put("lose", - 100000);
         scores.put("draw", 0); 
     }
-
 
     /**
      * A transposition table to store static evaluations of already
@@ -57,9 +63,10 @@ public class Bot {
     }
 
     /**
-     * Since minimax is a depth-bounded algorithm, maximum search depth has to be specifyied
+     * Iterative search should not go beyond depth 3, because depth 2
+     * is sufficient and results from partial dept-3 search were weird.
      */
-    private int DEPTH = 2;
+    private int MAXDEPTH = 3;
 
     // MARK: - constructor
 
@@ -192,14 +199,115 @@ public class Bot {
     }
 
     /**
-     * Chooses a move it can find in a given position.
+     * A slight alteration of basic minimax w/ alpha-beta that enables the implementation of iterative deepening search.
+     * It requires two additional arguments: 
      * 
-     * @param game
-     * @param depth As alpha-beta is a depth-bounded algorithm,
-     * we pass the argument specifying maximum search depth.
+     * @param currentBest The move to be searched first, namely, the best move from previous iteration.
+     * This way, results from partial searches can also be accepted. 
+     * @param timeLeft For time-limiting purpouses.
      * @return
      */
-    public int chooseMoveAB(Igra game) {
+    private evaluatedMove minimaxABIterative(Igra game, int depth, Integer alpha, Integer beta, Player player, int currentBest, long timeLeft) {
+        long startingTime = System.currentTimeMillis();
+        // Retrieve the appropriate transposition table
+        Map<Long, Integer> transpositionTable = this.getTranspositionTable(player);
+        // If @player is the maximizer, the starting maxEval is negative "infinity",
+        // and if @player is the minimizer, the starting maxEval is "negative infinity". 
+        Integer maxEval = (game.player() == player) ? - Integer.MAX_VALUE : Integer.MAX_VALUE;
+        // Search only moves that are not too far from stones that are already on the board 
+        Set<Integer> candidates = game.candidates();
+        // A map for storing the evaluations of child nodes
+        Map<Integer, Integer> evaluations = new HashMap<Integer, Integer>();
+        // Since, for evaluation of a child node, the game must be copied,
+        // the copied games are stored in a map so as to avoid having to
+        // copy each game twice
+        Map<Integer, Igra> clonedGames = new HashMap<Integer, Igra>();
+        // Evaluate each candidate
+        for (int move : candidates) {
+            // Copy the game
+            Igra gameCopy = new Igra(game);
+            // Apply move
+            gameCopy.play(move);
+            // If this board was already evaluated, retrieve evaluation from table
+            Integer staticEvaluation = transpositionTable.get(gameCopy.hash());
+            // If not, calculate static evaluation and store it in the table for future reference 
+            if (staticEvaluation == null) {
+                GameState state = gameCopy.state();
+                if ((state == GameState.WIN_Black && player == Player.Black) ||
+                    (state == GameState.WIN_White && player == Player.White)) {
+                    staticEvaluation = scores.get("win");
+                }
+                else if ((state == GameState.WIN_Black && player == Player.White) ||
+                    (state == GameState.WIN_White && player == Player.Black)) {
+                    staticEvaluation = - scores.get("win");
+                }
+                else if (state == GameState.DRAW) {
+                    staticEvaluation = scores.get("draw");
+                }
+                else {
+                    Evaluator evaluator = new Evaluator(gameCopy);
+                    staticEvaluation = evaluator.evaluate(player);
+                }
+                transpositionTable.put(gameCopy.hash(), staticEvaluation);
+            }
+            // Store the cloned game
+            clonedGames.put(move, gameCopy);
+            // Store the evaluation of child node
+            evaluations.put(move, staticEvaluation);
+        }
+        // Transform the set of candidates into a list (for sorting)
+        List<Integer> sorted = new ArrayList<Integer>(candidates);
+        // Sort the list
+        sorted.sort((x,y) -> evaluations.get(y).compareTo(evaluations.get(x))); // Yay, lambda expressions!
+        int bestMove = currentBest;
+        for (int move : sorted) {
+            // If time is over, break
+            long elapsedTime = System.currentTimeMillis() - startingTime;
+            if (elapsedTime > timeLeft) return new evaluatedMove(bestMove, maxEval);
+            // Retrieve the cloned game
+            Igra clone = clonedGames.get(move);
+            Integer eval;
+            // If position is terminal or maximum depth was reached, retrieve evaluation
+            // from table. We can be sure that eval != null.
+            if (!(clone.state() == GameState.IN_PROGRESS) || depth == 0) {
+                eval = transpositionTable.get(clone.hash());
+            }
+            // Else, make a recursive call
+            else {
+                eval = minimaxAB(clone, depth - 1, alpha, beta, player).eval();
+            }
+            // Maximizer
+            if (game.player() == player) {
+                if (eval > maxEval) {
+                    maxEval = eval;
+                    bestMove = move;
+                    alpha = Math.max(alpha, maxEval);
+                }
+            }
+            // Minimizer
+            else {
+                if (eval < maxEval) {
+                    maxEval = eval;
+                    bestMove = move;
+                    beta = Math.min(beta, maxEval);
+                }
+            }
+            // If position is unreachable, terminate loop and return
+            if (alpha >= beta)
+                return new evaluatedMove(bestMove, maxEval);
+
+        }
+        return new evaluatedMove(bestMove, maxEval);
+    }
+
+    /**
+     * Chooses the best move it can find usin iterative deepening search.
+     * 
+     * @param game
+     * @return
+     */
+    public int chooseMoveIterative(Igra game) {
+        long startingTime = System.currentTimeMillis();
         // Check that the gamestate is not terminal
         if (game.state() != GameState.IN_PROGRESS) {
             throw new IllegalArgumentException("Position is terminal. I cannot choose a move!");
@@ -216,7 +324,17 @@ public class Bot {
         }
         // Else, apply the minimax algorithm the the game.
         else {
-            return minimaxAB(game, DEPTH, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
+            int bestMove = minimaxAB(game, 1, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
+            for (int i = 2;; i++) {
+                long timeElapsed = System.currentTimeMillis() - startingTime;
+                long timeLeft = 4700 - timeElapsed; // 4700 instad of 5000 because timing is a bit fuzzy
+                if (timeLeft < 0 || i == MAXDEPTH) {
+                    System.out.println("Ply reached = " + (i-1));
+                    break;
+                }
+                bestMove = minimaxABIterative(game, i, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), bestMove, timeLeft).move();
+            }
+            return bestMove;
         }
     }
     
@@ -248,9 +366,12 @@ public class Bot {
             }
             else {
                 if (flag) {
-                    int move = bot.chooseMoveAB(game); // If depth were three, move-selection would take far longer than 5 seconds
+                    long start = System.currentTimeMillis();
+                    int move = bot.chooseMoveIterative(game);
                     game.play(move);
+                    long end = System.currentTimeMillis();
                     System.out.println(game);
+                    System.out.println(end - start);                    
                     flag = false;
                     continue;   
                 }
