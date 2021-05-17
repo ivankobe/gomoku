@@ -6,7 +6,6 @@ import static util.Util.shl;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 import logika.Igra;
 import logika.Igra.Player;
@@ -102,8 +101,8 @@ public class Evaluator {
         scores = new HashMap<String, Integer>();
         scores.put("live four", 10000);
         scores.put("open three", 5000);
-        scores.put("dead four", 1000);
-        scores.put("broken three", 1000);
+        scores.put("broken three", 5000);
+        scores.put("dead four", 2000);
         scores.put("closed three", 200);
         scores.put("two", 10);
     }

@@ -17,7 +17,9 @@ public class Bot {
      * Computer player.
      * 
      * TODO: timing is a bit fuzzy, is it OK that it sometimes takes a few miliseconds more than 5000 for bot to choose a move?
+     * ? (this has not happened) to me in quite some while, but it is theoretically possible anyway
      * TODO: where should the bot play the second move? If the first move is in the corner, it should probably play in the center. 
+     * ! implement patterns: X X _ X X, X _ X X X, X X X _ X  
      */
 
     /**
@@ -31,8 +33,8 @@ public class Bot {
      */
     static {
         scores = new HashMap<String, Integer>();
-        scores.put("win", 100000);
-        scores.put("lose", - 100000);
+        scores.put("win", 1000000);
+        scores.put("lose", - 1000000);
         scores.put("draw", 0); 
     }
 
@@ -320,6 +322,19 @@ public class Bot {
                 6 + 8 * 15, 7 + 8 * 15, 8 + 8 * 15,                
             };
             return center[rand.nextInt(center.length)];
+        }
+        // If this is the second move, also play at the center.
+        else if (game.getEmpties().cardinality() == 224) {
+            Random rand = new Random();
+            int[] center = {
+                6 + 6 * 15, 7 + 6 * 15, 8 + 6 * 15,
+                6 + 7 * 15, 7 + 7 * 15, 8 + 7 * 15,
+                6 + 8 * 15, 7 + 8 * 15, 8 + 8 * 15,                
+            };
+            while (true) {
+                int choice = center[rand.nextInt(center.length)];
+                if (game.getEmpties().get(choice)) return choice;
+            }           
         }
         // Else, apply the minimax algorithm the the game.
         else {

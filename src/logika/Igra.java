@@ -183,11 +183,8 @@ public class Igra implements IGameInfo {
 	/**
 	 * An additional data structure that thracks all empty fields on the board whose
 	 * distance (in any direction) to the nearest non-empty field is not greater
-	 * than two. @candidates are calculated incrementally. This is used to cut down
-	 * the branching factor in the game-tree. ? Since this information is only
-	 * needed for the ai, we should think about ? restricting these computations to
-	 * the cases when one of the players is a bot. ? But since they are not very
-	 * expensive, this is not so very important.
+	 * than one. @candidates are calculated incrementally. This is used to cut down
+	 * the branching factor in the game-tree.
 	 */
 	private Set<Integer> candidates;
 
