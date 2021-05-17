@@ -55,9 +55,6 @@ public class Window extends JFrame implements ActionListener {
 		igra_menu.add(this.startGameMenuItem);
 		
 		this.startGameMenuItem.addActionListener(this);
-		
-		// View
-		this.setLayout(new BorderLayout());
 	}
 
 	// MARK: - Methods
@@ -68,6 +65,7 @@ public class Window extends JFrame implements ActionListener {
 	 */
 	public void setView(JPanel view) {		
 		this.removeAll();
+		this.setLayout(new BorderLayout());
 		this.add(view);
 		this.validate();
 	}
