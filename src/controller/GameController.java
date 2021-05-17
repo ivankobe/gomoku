@@ -1,9 +1,10 @@
 package controller;
 
+import javax.swing.JPanel;
+
 import logika.Igra;
 import logika.Igra.GameState;
-import logika.Igra.Player;
-import splosno.Koordinati;
+import logika.Igra.Field;
 import view.GameView;
 
 /**
@@ -12,39 +13,101 @@ import view.GameView;
 
 public class GameController implements IGameController {
 	/**
-	 * The view that this controller is in control of.
+	 * Back reference to the view that this controller is in control of.
 	 */
 	private GameView view;
-	
+
 	/**
 	 * The game state.
 	 */
 	private Igra game;
-	
+
+	/**
+	 * The index of the stone that is currently selected.
+	 */
+	private Integer active;
+
 	/**
 	 * References to the palyer classes.
 	 */
 	private IPlayer black;
 	private IPlayer white;
-	
+
 	// MARK: - Contructor
-	
+
 	public GameController(IPlayer black, IPlayer white) {
 		this.black = black;
 		this.white = white;
 		
+		this.game = new Igra();
+		this.view = new GameView(this);
+
 		// Start
 		this.tick();
 	}
-	
-	// MARK: - Methods
+
+	// MARK: - Accessors
+
+	/**
+	 * Returns the black player in the game.
+	 * 
+	 * @return
+	 */
+	public IPlayer black() {
+		return this.black;
+	}
+
+	/**
+	 * Returns the white player of the game.
+	 * 
+	 * @return
+	 */
+	public IPlayer white() {
+		return this.white;
+	}
 	
 	/**
-	 * Represents a single round on the board. Events are handled
-	 * so that we give away control to the player until the player performs a move.
+	 * Returns information about the stone at index n.
+	 * 
+	 * @param n
+	 * @return
+	 */
+	public Field field(int n) {
+		return this.game.field(n);
+	}
+	
+	/**
+	 * Returns the active stone integer.
+	 * 
+	 * @return
+	 */
+	public Integer active() {
+		return this.active;
+	}
+	
+	/**
+	 * Returns the size of the game.
+	 * @return
+	 */
+	public int size() {
+		return this.game.size();
+	}
+	
+	/**
+	 * Returns the view of the game.
+	 */
+	public JPanel panel() {
+		return this.view;
+	}
+	
+	// MARK: - Methods
+
+	/**
+	 * Represents a single round on the board. Events are handled so that we give
+	 * away control to the player until the player performs a move.
 	 */
 	private void tick() {
-		while (this.game.state() == GameState.IN_PROGRESS) {
+		if (this.game.state() == GameState.IN_PROGRESS) {
 			switch (this.game.player()) {
 			case Black:
 				this.black.move(this);
@@ -53,41 +116,40 @@ public class GameController implements IGameController {
 				this.white.move(this);
 			}
 		}
-		
-		
+
 	}
 
 	// MARK: - IGameViewController
 
 	@Override
-	public boolean setActive(Koordinati koodrinati) {
-		
-		
+	public void setActive(Integer n) {
+		this.active = n;
 		this.view.repaint();
-		
-		return false;
 	}
 
 	@Override
-	public void confirm() {
-		this.game.play(5);
-		
+	public boolean confirm() {
+		if (this.active == null)
+			return false;
+
+		boolean successful = this.game.play(active);
+
+		//
 		this.view.repaint();
-		
-		// Next turn.
-		this.tick();
+		if (successful)
+			this.tick();
+
+		return successful;
 	}
 
 	@Override
-	public IGameInfo state() {
-		// TODO Auto-generated method stub
+	public Igra state() {
 		return this.game;
 	}
 
 	@Override
 	public IGameViewInfo view() {
-		// TODO Auto-generated method stub
 		return this.view;
 	}
-	
+
 }

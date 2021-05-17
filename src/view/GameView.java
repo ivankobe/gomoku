@@ -9,6 +9,7 @@ import java.awt.Point;
 
 import javax.swing.JPanel;
 
+import controller.GameController;
 import controller.IGameViewInfo;
 import logika.Igra;
 
@@ -24,30 +25,14 @@ public class GameView extends JPanel implements IGameViewInfo {
 	private final static int PADDING = 30;
 
 	// MARK: - State
-
-	/**
-	 * The game that we are playing.
-	 */
-	private Igra game;
-
-	/**
-	 * The index of the stone we are hovering over.
-	 */
-	private Integer active;
-
-	private Color black;
-	private Color white;
+	
+	private GameController controller;
 
 	// MARK: - Constructor
 
-	public GameView(Igra game) {
+	public GameView(GameController controller) {
 		super();
-
-		// State
-		this.game = game;
-
-		this.black = Color.BLACK;
-		this.white = Color.WHITE;
+		this.controller = controller;
 
 		// Size
 		this.setPreferredSize(new Dimension(400, 800));
@@ -68,26 +53,26 @@ public class GameView extends JPanel implements IGameViewInfo {
 		g2.setStroke(new BasicStroke(3));
 
 		// Points
-		for (int y = 0; y < this.game.size(); y++) {
-			for (int x = 0; x < this.game.size(); x++) {
-				int n = y * this.game.size() + x;
+		for (int y = 0; y < this.controller.size(); y++) {
+			for (int x = 0; x < this.controller.size(); x++) {
+				int n = y * this.controller.size() + x;
 
 				Point coord = this.point(n);
 
 				// Calculated properties
 				int r = 3;
 
-				switch (this.game.field(n)) {
+				switch (this.controller.field(n)) {
 				case White:
-					g.setColor(this.white);
+					g.setColor(this.controller.white().color());
 					r = 10;
 					break;
 				case Black:
-					g.setColor(this.black);
+					g.setColor(this.controller.black().color());
 					r = 10;
 					break;
 				case EMPTY:
-					if (this.active == null || this.active != n) {
+					if (this.controller.active() == null || this.controller.active() != n) {
 						g.setColor(Color.DARK_GRAY);
 						break;
 					}
@@ -95,13 +80,7 @@ public class GameView extends JPanel implements IGameViewInfo {
 					// Show the active stone.
 					r = 8;
 
-					switch (this.game.player()) {
-					case White:
-						g.setColor(this.white);
-						break;
-					case Black:
-						g.setColor(this.black);
-					}
+					g.setColor(getBackground());
 				}
 
 				// Draw a stone.
@@ -121,7 +100,7 @@ public class GameView extends JPanel implements IGameViewInfo {
 		int height = this.getHeight();
 
 		int container = Math.min(width, height);
-		return (container - 2 * PADDING) / this.game.size();
+		return (container - 2 * PADDING) / this.controller.size();
 	}
 
 	/**
@@ -139,8 +118,8 @@ public class GameView extends JPanel implements IGameViewInfo {
 		int container = Math.min(width, height);
 		int spacing = this.spacing();
 
-		int x = n % this.game.size();
-		int y = n / this.game.size();
+		int x = n % this.controller.size();
+		int y = n / this.controller.size();
 
 		/**
 		 * We calculate the center of the stone by considering all the margins from the

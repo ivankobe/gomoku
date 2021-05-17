@@ -1,5 +1,6 @@
 package inteligenca;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -12,21 +13,14 @@ import view.GameView;
 
 public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 	
-	/**
-	 * References the controler that we may use to make selection.
-	 */
-	
-	private IGameController controller;
-	
-	@Override
-	public void move(IGameController controller) {
-		this.controller = controller;
-	}
+	private String name;
+	private Color color;
 
 	// MARK: - Contructor
 
-	public Clovek(String name) {
-
+	public Clovek(String name, Color color) {
+		this.name = name;
+		this.color = color;
 		
 	}
 	
@@ -36,7 +30,27 @@ public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 	 * Returns the name of the human.
 	 */
 	public String name() {
-		return "";
+		return this.name;
+	}
+	
+	/**
+	 * Returns the color of the stones.
+	 */
+	public Color color() {
+		return this.color;
+	}
+	
+	// MARK: - Move
+	
+	/**
+	 * References the controler that we may use to make selection.
+	 */
+	
+	private IGameController controller;
+	
+	@Override
+	public void move(IGameController controller) {
+		this.controller = controller;
 	}
 	
 	// MARK: - Events
@@ -60,8 +74,8 @@ public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 		int y = e.getY();
 		
 		// Stones
-		for (int n: this.controller.state().empties()) {
-			Point coord = this.controller.view().point(1);
+		for (int n: this.controller.state().validMoves()) {
+			Point coord = this.controller.view().point(n);
 			
 			if (d(coord.x, coord.y, x, y) < 10) {
 				this.controller.setActive(null);
@@ -69,7 +83,8 @@ public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 		}
 	}
 
-
+	// MARK: - Utility functions
+	
 	/**
 	 * Calculates the distance from point (a, b) to (x, y).
 	 * 

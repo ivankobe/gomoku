@@ -1,4 +1,4 @@
-import view.Window;
+import controller.WindowController;
 
 /**
  *	This is the main file that starts the game. Here, we bridge together
@@ -7,8 +7,7 @@ import view.Window;
 
 public class Gomoku {
 	public static void main(String[] args) {
-		Window okno = new Window();
-		okno.pack();
-		okno.setVisible(true);
+		WindowController controller = new WindowController();
+		controller.show();
 	}
 }

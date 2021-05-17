@@ -7,12 +7,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import controller.IGameInfo;
 import splosno.Koordinati;
 
 import static util.Util.*;
 
-public class Igra implements IGameInfo {
+public class Igra {
 
 	// MARK: - State
 
@@ -104,12 +103,12 @@ public class Igra implements IGameInfo {
 	/**
 	 * A custom static class for storing hash values
 	 */
-	static class pairMovePlayer {
+	static class PairMovePlayer {
 
 		int move;
 		Player player;
 
-		protected pairMovePlayer(int move, Player player) {
+		protected PairMovePlayer(int move, Player player) {
 			this.move = move;
 			this.player = player;
 		}
@@ -130,9 +129,9 @@ public class Igra implements IGameInfo {
 		public boolean equals(Object o) {
 			if (o == this)
 				return true;
-			if (!(o instanceof pairMovePlayer))
+			if (!(o instanceof PairMovePlayer))
 				return false;
-			pairMovePlayer pair = (pairMovePlayer) o;
+			PairMovePlayer pair = (PairMovePlayer) o;
 			return this.move == pair.move && this.player == pair.player;
 		}
 	}
@@ -148,17 +147,17 @@ public class Igra implements IGameInfo {
 	 * multithreading? ? If so, does each thread operate with its own @hashmap? ?
 	 * Does this produce collisions?
 	 */
-	private static final Map<pairMovePlayer, Long> hashmap;
+	private static final Map<PairMovePlayer, Long> hashmap;
 
 	// Initialize hashmap
 	static {
-		hashmap = new HashMap<pairMovePlayer, Long>();
+		hashmap = new HashMap<PairMovePlayer, Long>();
 		Random rand = new Random();
 		for (int i = 0; i < 225; i++) {
 			long hashBlack = Math.abs(rand.nextLong());
-			hashmap.put(new pairMovePlayer(i, Player.Black), hashBlack);
+			hashmap.put(new PairMovePlayer(i, Player.Black), hashBlack);
 			long hashWhite = Math.abs(rand.nextLong());
-			hashmap.put(new pairMovePlayer(i, Player.White), hashWhite);
+			hashmap.put(new PairMovePlayer(i, Player.White), hashWhite);
 		}
 	}
 
@@ -290,79 +289,29 @@ public class Igra implements IGameInfo {
 	public boolean isValidMove(int n) {
 		if (n >= 225 || n < 0)
 			return false;
-		else
-			return this.validMoves().get(n);
+		return this.validMoves().contains(n);
 	}
 
 	/**
 	 * Use this function to get a list of valid moves in the game.
 	 * 
-	 * @return A list of valid moves.
+	 * @return A list of valid moves. j
 	 */
-	public BitSet validMoves() {
-		switch (this.state()) {
-		case IN_PROGRESS:
-			return empties;
-		default:
-			return new BitSet(225); // ? Why? I get the idea ampak. . . why . not..?
+	public Set<Integer> validMoves() {
+		Set<Integer> moves = new HashSet<Integer>();
+
+		if (this.state() != GameState.IN_PROGRESS)
+			return moves;
+
+		int n = this.size() * this.size();
+		for (int i = 0; i < n; i++) {
+			if (this.field(n) == Field.EMPTY)
+				moves.add(i);
 		}
+		return moves;
 	}
 
 	// MARK: - Play
-
-	/**
-	 * Incrementally updating the set of candidates after a move is played.
-	 * 
-	 * @param move
-	 */
-	private void updateCandidates(int move) {
-		this.candidates.remove(move);
-		// Search two steps in all eight directions
-		// Horisontally
-		int horD = move % 15; // Space in the decreasing (D) horisontal (hor) direction
-		if (horD > 0 & isValidMove(move - 1))
-			this.candidates.add(move - 1);
-		// if (horD > 1 & isValidMove(move - 2))
-		// 	this.candidates.add(move - 2);
-		int horI = 14 - horD;
-		if (horI > 0 & isValidMove(move + 1))
-			this.candidates.add(move + 1);
-		// if (horI > 1 & isValidMove(move + 2))
-		// 	this.candidates.add(move + 2);
-		// Vertically
-		int verD = move / 15;
-		if (verD > 0 & isValidMove(move - 15))
-			this.candidates.add(move - 15);
-		// if (verD > 1 & isValidMove(move - 2 * 15))
-		// 	this.candidates.add(move - 2 * 15);
-		int verI = 14 - verD;
-		if (verI > 0 & isValidMove(move + 15))
-			this.candidates.add(move + 15);
-		// if (verI > 1 & isValidMove(move + 2 * 15))
-		// 	this.candidates.add(move + 2 * 15);
-		// On the diagonal
-		int diagD = Math.min(horI, verD);
-		if (diagD > 0 & isValidMove(move - 14))
-			this.candidates.add(move - 14);
-		// if (diagD > 1 & isValidMove(move - 2 * 14))
-		// 	this.candidates.add(move - 2 * 14);
-		int diagI = Math.min(horD, verI);
-		if (diagI > 0 & isValidMove(move + 14))
-			this.candidates.add(move + 14);
-		// if (diagI > 1 & isValidMove(move + 2 * 14))
-		// 	this.candidates.add(move + 2 * 14);
-		// On the counterdiagonal
-		int counterdiagD = Math.min(horD, verD);
-		if (counterdiagD > 0 & isValidMove(move - 16))
-			this.candidates.add(move - 16);
-		// if (counterdiagD > 1 & isValidMove(move - 2 * 16))
-		// 	this.candidates.add(move - 2 * 16);
-		int counterdiagI = Math.min(horI, verI);
-		if (counterdiagI > 0 & isValidMove(move + 16))
-			this.candidates.add(move + 16);
-		// if (counterdiagI > 1 & isValidMove(move + 2 * 16))
-		// 	this.candidates.add(move + 2 * 16);
-	}
 
 	/**
 	 * Places a stone on the board.
@@ -382,18 +331,72 @@ public class Igra implements IGameInfo {
 		// Clear the complement.
 		this.empties.clear(move);
 		// Update hash
-		this.hash = this.hash ^ hashmap.get(new pairMovePlayer(move, this.player()));
+		this.hash = this.hash ^ hashmap.get(new PairMovePlayer(move, this.player()));
 		// Update candidates
 		this.updateCandidates(move);
-		
+
 		// Update the player.
 		this.player = this.player.next();
 		return true;
 	}
-	
+
 	/**
-	 * Places a stone on the board with the given coordinates
-	 * and tells whether the move is valid.
+	 * Incrementally updating the set of candidates after a move is played.
+	 * 
+	 * @param move
+	 */
+	private void updateCandidates(int move) {
+		this.candidates.remove(move);
+		// Search two steps in all eight directions
+		// Horisontally
+		int horD = move % 15; // Space in the decreasing (D) horisontal (hor) direction
+		if (horD > 0 & isValidMove(move - 1))
+			this.candidates.add(move - 1);
+		// if (horD > 1 & isValidMove(move - 2))
+		// this.candidates.add(move - 2);
+		int horI = 14 - horD;
+		if (horI > 0 & isValidMove(move + 1))
+			this.candidates.add(move + 1);
+		// if (horI > 1 & isValidMove(move + 2))
+		// this.candidates.add(move + 2);
+		// Vertically
+		int verD = move / 15;
+		if (verD > 0 & isValidMove(move - 15))
+			this.candidates.add(move - 15);
+		// if (verD > 1 & isValidMove(move - 2 * 15))
+		// this.candidates.add(move - 2 * 15);
+		int verI = 14 - verD;
+		if (verI > 0 & isValidMove(move + 15))
+			this.candidates.add(move + 15);
+		// if (verI > 1 & isValidMove(move + 2 * 15))
+		// this.candidates.add(move + 2 * 15);
+		// On the diagonal
+		int diagD = Math.min(horI, verD);
+		if (diagD > 0 & isValidMove(move - 14))
+			this.candidates.add(move - 14);
+		// if (diagD > 1 & isValidMove(move - 2 * 14))
+		// this.candidates.add(move - 2 * 14);
+		int diagI = Math.min(horD, verI);
+		if (diagI > 0 & isValidMove(move + 14))
+			this.candidates.add(move + 14);
+		// if (diagI > 1 & isValidMove(move + 2 * 14))
+		// this.candidates.add(move + 2 * 14);
+		// On the counterdiagonal
+		int counterdiagD = Math.min(horD, verD);
+		if (counterdiagD > 0 & isValidMove(move - 16))
+			this.candidates.add(move - 16);
+		// if (counterdiagD > 1 & isValidMove(move - 2 * 16))
+		// this.candidates.add(move - 2 * 16);
+		int counterdiagI = Math.min(horI, verI);
+		if (counterdiagI > 0 & isValidMove(move + 16))
+			this.candidates.add(move + 16);
+		// if (counterdiagI > 1 & isValidMove(move + 2 * 16))
+		// this.candidates.add(move + 2 * 16);
+	}
+
+	/**
+	 * Places a stone on the board with the given coordinates and tells whether the
+	 * move is valid.
 	 * 
 	 * @param koordinati
 	 * @return
@@ -422,7 +425,7 @@ public class Igra implements IGameInfo {
 			return GameState.DRAW;
 		return GameState.IN_PROGRESS;
 	}
-	
+
 	/**
 	 * Checks whether the player has a continuous string of five or more set bits.
 	 * 
@@ -454,13 +457,16 @@ public class Igra implements IGameInfo {
 	// MARK: - Overrides
 
 	@Override
-    public String toString() {
-        String str = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 \n";   
+	public String toString() {
+		String str = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 \n";
 		int row = 0;
-        for (int i = 0; i < 225; i++) {
-            if (this.blacks.get(i)) str = str + "X ";
-			else if (this.whites.get(i)) str = str + "O ";
-			else str = str + "_ ";
+		for (int i = 0; i < 225; i++) {
+			if (this.blacks.get(i))
+				str = str + "X ";
+			else if (this.whites.get(i))
+				str = str + "O ";
+			else
+				str = str + "_ ";
 			if (i % 15 == 14) {
 				str = str + " " + String.valueOf(row) + "\n";
 				row++;

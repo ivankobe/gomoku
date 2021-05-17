@@ -1,6 +1,6 @@
 package controller;
 
-import splosno.Koordinati;
+import logika.Igra;
 
 /**
  * Specifies the methods available for the player to use to communicate with the game.
@@ -10,22 +10,22 @@ public interface IGameController {
 	/**
 	 * Sets the active stone.
 	 * 
-	 * @param koodrinati
+	 * @param n
 	 * @return boolean indecating if the move was valid.
 	 */
-	public boolean setActive(Koordinati koodrinati);
+	public void setActive(Integer n);
 	
 	/**
 	 * Submits the active play.
 	 */
-	public void confirm();
+	public boolean confirm();
 	
 	/**
 	 * Returns the current state of the game so that the player
 	 * may investigate the best move.
 	 * @return
 	 */
-	public IGameInfo state();
+	public Igra state();
 	
 	/**
 	 * Contains information about how the game is being displayed.
