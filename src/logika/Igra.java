@@ -325,46 +325,46 @@ public class Igra implements IGameInfo {
 		int horD = move % 15; // Space in the decreasing (D) horisontal (hor) direction
 		if (horD > 0 & isValidMove(move - 1))
 			this.candidates.add(move - 1);
-		if (horD > 1 & isValidMove(move - 2))
-			this.candidates.add(move - 2);
+		// if (horD > 1 & isValidMove(move - 2))
+		// 	this.candidates.add(move - 2);
 		int horI = 14 - horD;
 		if (horI > 0 & isValidMove(move + 1))
 			this.candidates.add(move + 1);
-		if (horI > 1 & isValidMove(move + 2))
-			this.candidates.add(move + 2);
+		// if (horI > 1 & isValidMove(move + 2))
+		// 	this.candidates.add(move + 2);
 		// Vertically
 		int verD = move / 15;
 		if (verD > 0 & isValidMove(move - 15))
 			this.candidates.add(move - 15);
-		if (verD > 1 & isValidMove(move - 2 * 15))
-			this.candidates.add(move - 2 * 15);
+		// if (verD > 1 & isValidMove(move - 2 * 15))
+		// 	this.candidates.add(move - 2 * 15);
 		int verI = 14 - verD;
 		if (verI > 0 & isValidMove(move + 15))
 			this.candidates.add(move + 15);
-		if (verI > 1 & isValidMove(move + 2 * 15))
-			this.candidates.add(move + 2 * 15);
+		// if (verI > 1 & isValidMove(move + 2 * 15))
+		// 	this.candidates.add(move + 2 * 15);
 		// On the diagonal
 		int diagD = Math.min(horI, verD);
 		if (diagD > 0 & isValidMove(move - 14))
 			this.candidates.add(move - 14);
-		if (diagD > 1 & isValidMove(move - 2 * 14))
-			this.candidates.add(move - 2 * 14);
+		// if (diagD > 1 & isValidMove(move - 2 * 14))
+		// 	this.candidates.add(move - 2 * 14);
 		int diagI = Math.min(horD, verI);
 		if (diagI > 0 & isValidMove(move + 14))
 			this.candidates.add(move + 14);
-		if (diagI > 1 & isValidMove(move + 2 * 14))
-			this.candidates.add(move + 2 * 14);
+		// if (diagI > 1 & isValidMove(move + 2 * 14))
+		// 	this.candidates.add(move + 2 * 14);
 		// On the counterdiagonal
 		int counterdiagD = Math.min(horD, verD);
 		if (counterdiagD > 0 & isValidMove(move - 16))
 			this.candidates.add(move - 16);
-		if (counterdiagD > 1 & isValidMove(move - 2 * 16))
-			this.candidates.add(move - 2 * 16);
+		// if (counterdiagD > 1 & isValidMove(move - 2 * 16))
+		// 	this.candidates.add(move - 2 * 16);
 		int counterdiagI = Math.min(horI, verI);
 		if (counterdiagI > 0 & isValidMove(move + 16))
 			this.candidates.add(move + 16);
-		if (counterdiagI > 1 & isValidMove(move + 2 * 16))
-			this.candidates.add(move + 2 * 16);
+		// if (counterdiagI > 1 & isValidMove(move + 2 * 16))
+		// 	this.candidates.add(move + 2 * 16);
 	}
 
 	/**

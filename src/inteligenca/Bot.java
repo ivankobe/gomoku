@@ -16,7 +16,6 @@ public class Bot {
     /**
      * Computer player.
      * 
-     * TODO: reduce max distance of candidates from played stones from 2 to 1
      * TODO: timing is a bit fuzzy, is it OK that it sometimes takes a few miliseconds more than 5000 for bot to choose a move?
      * TODO: where should the bot play the second move? If the first move is in the corner, it should probably play in the center. 
      */
@@ -327,16 +326,18 @@ public class Bot {
             int bestMove = minimaxAB(game, 1, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
             for (int i = 2;; i++) {
                 long timeElapsed = System.currentTimeMillis() - startingTime;
-                long timeLeft = 4700 - timeElapsed; // 4700 instad of 5000 because timing is a bit fuzzy
-                if (timeLeft < 0 || i == MAXDEPTH) {
+                long timeLeft = 5000 - timeElapsed; // 4700 instad of 5000 because timing is a bit fuzzy
+                if (timeLeft < 0 || i > MAXDEPTH) {
                     System.out.println("Ply reached = " + (i-1));
                     break;
                 }
-                bestMove = minimaxABIterative(game, i, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), bestMove, timeLeft).move();
+                bestMove = minimaxABIterative(game, i, - Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), bestMove, timeLeft - 1000).move();
             }
             return bestMove;
         }
     }
+    
+
     
     /**
      * A simple interface for testing purpouses.
