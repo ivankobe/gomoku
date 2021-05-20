@@ -67,7 +67,8 @@ public class Igra {
 		public Player next() {
 			if (this == Black)
 				return White;
-			return Black;
+			else
+				return Black;
 		}
 	}
 
@@ -271,12 +272,11 @@ public class Igra {
 	 * @return
 	 */
 	public Field field(int n) {
-		if (blacks.get(n)) {
+		if (blacks.get(n))
 			return Field.Black;
-		}
-		if (whites.get(n)) {
+
+		if (whites.get(n))
 			return Field.White;
-		}
 
 		return Field.EMPTY;
 	}
@@ -323,6 +323,7 @@ public class Igra {
 			return false;
 
 		// Update the board.
+		System.out.println(move + " " + this.player);
 		if (this.player == Player.Black)
 			this.blacks.set(move);
 		else
@@ -401,8 +402,8 @@ public class Igra {
 	 * @param koordinati
 	 * @return
 	 */
-	public boolean odigraj(Koordinati koordinati) {
-		return this.play(koordinati.getX() + koordinati.getY() * this.size);
+	public boolean odigraj(Koordinati coord) {
+		return this.play(coord.getY() * this.size + coord.getX());
 	}
 
 	// MARK: - State

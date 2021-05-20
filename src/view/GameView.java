@@ -1,133 +1,105 @@
 package view;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
 import java.awt.Point;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import controller.GameController;
-import controller.IGameViewInfo;
-import logika.Igra;
+import controller.IGameController;
+import controller.IGameView;
 
 /**
-* GameView is in charge of displaying a single game and listens for user input.
-*/
+ * GameView is in charge of displaying a single game and listens for user input.
+ */
 
 @SuppressWarnings("serial")
-public class GameView extends JPanel implements IGameViewInfo {
-
-	// MARK: - Static
-
-	private final static int PADDING = 30;
+public class GameView extends JPanel implements IGameView {
 
 	// MARK: - State
-	
-	private GameController controller;
+
+	private IGameController controller;
+
+	// MARK: - Components
+
+	private BoardView board;
+	private JLabel status;
 
 	// MARK: - Constructor
 
-	public GameView(GameController controller) {
-		super();
-		this.controller = controller;
+	public GameView(IGameController controller) {
+		// Status
+		this.status = new JLabel();
+		this.status.setFont(new Font(status.getFont().getName(), status.getFont().getStyle(), 20));
 
-		// Size
-		this.setPreferredSize(new Dimension(400, 800));
+		GridBagConstraints status_layout = new GridBagConstraints();
+		status_layout.gridx = 0;
+		status_layout.gridy = 0;
+		status_layout.anchor = GridBagConstraints.CENTER;
+		this.add(this.status, status_layout);
 
-		// Events
-		this.setFocusable(true);
+		// Board
+		this.board = new BoardView(controller);
+
+		GridBagConstraints board_layout = new GridBagConstraints();
+		board_layout.gridx = 0;
+		board_layout.gridy = 1;
+		board_layout.fill = GridBagConstraints.BOTH;
+		board_layout.weightx = 1.0;
+		board_layout.weighty = 1.0;
+
+		this.add(this.board, board_layout);
 	}
 
-	// MARK: - View
-
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-
-		// Canvas
-
-		Graphics2D g2 = (Graphics2D) g;
-		g2.setStroke(new BasicStroke(3));
-
-		// Points
-		for (int y = 0; y < this.controller.size(); y++) {
-			for (int x = 0; x < this.controller.size(); x++) {
-				int n = y * this.controller.size() + x;
-
-				Point coord = this.point(n);
-
-				// Calculated properties
-				int r = 3;
-
-				switch (this.controller.field(n)) {
-				case White:
-					g.setColor(this.controller.white().color());
-					r = 10;
-					break;
-				case Black:
-					g.setColor(this.controller.black().color());
-					r = 10;
-					break;
-				case EMPTY:
-					if (this.controller.active() == null || this.controller.active() != n) {
-						g.setColor(Color.DARK_GRAY);
-						break;
-					}
-
-					// Show the active stone.
-					r = 8;
-
-					g.setColor(getBackground());
-				}
-
-				// Draw a stone.
-				g.fillOval(coord.x - r, coord.y - r, 2 * r, 2 * r);
-			}
-		}
-	}
-
+	// MARK: - Accessors
 
 	/**
-	 * Returns the spacing between the centers of two points.
-	 * 
-	 * @return
-	 */
-	private int spacing() {
-		int width = this.getWidth();
-		int height = this.getHeight();
-
-		int container = Math.min(width, height);
-		return (container - 2 * PADDING) / this.controller.size();
-	}
-
-	/**
-	 * Returns the x and y coordinate of the center of the point with index n on the screen. We
-	 * try to get max spacing for the points considering the padding and the size of
-	 * the window.
-	 * 
-	 * @param n
-	 * @return A pair of coordinates.
+	 * Returns information about the stone with a given index.
 	 */
 	public Point point(int n) {
-		int width = this.getWidth();
-		int height = this.getHeight();
+		return this.board.point(n);
+	}
 
-		int container = Math.min(width, height);
-		int spacing = this.spacing();
+	/**
+	 * Returns the board view.
+	 */
+	public JPanel board() {
+		return this.board;
+	}
 
-		int x = n % this.controller.size();
-		int y = n / this.controller.size();
+	// MARK: - Methods
 
-		/**
-		 * We calculate the center of the stone by considering all the margins from the
-		 * left-top border.
-		 */
-		int cx = Math.max((width - container) / 2, 0) + PADDING + (spacing / 2) + x * spacing;
-		int cy = Math.max((height - container) / 2, 0) + PADDING + (spacing / 2) + y * spacing;
+	@Override
+	public void repaint() {
+		if (this.controller == null)
+			return;
 
-		return new Point(cx, cy);
+		// Update status
+		String message = "";
+
+		status: switch (this.controller.state()) {
+		case IN_PROGRESS:
+			switch (this.controller.player()) {
+			case Black:
+				message = this.controller.black().name() + " na potezi...";
+				break status;
+			case White:
+				message = this.controller.white().name() + " na potezi...";
+				break status;
+			}
+		case WIN_Black:
+			message = this.controller.black().name() + " zmagal!";
+			break;
+		case WIN_White:
+			message = this.controller.white().name() + " zmagal!";
+			break;
+		case DRAW:
+			message = "Igra neodločena.";
+			break;
+		}
+
+		System.out.println(message);
+		this.status.setText(message);
 	}
 }

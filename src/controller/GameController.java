@@ -5,17 +5,18 @@ import javax.swing.JPanel;
 import logika.Igra;
 import logika.Igra.GameState;
 import logika.Igra.Field;
+import view.BoardView;
 import view.GameView;
 
 /**
  * Game controller synchronises game view with the view.
  */
 
-public class GameController implements IGameController {
+public class GameController implements ITurnController, IGameController {
 	/**
 	 * Back reference to the view that this controller is in control of.
 	 */
-	private GameView view;
+	private IGameView view;
 
 	/**
 	 * The game state.
@@ -38,9 +39,9 @@ public class GameController implements IGameController {
 	public GameController(IPlayer black, IPlayer white) {
 		this.black = black;
 		this.white = white;
-		
+
 		this.game = new Igra();
-		this.view = new GameView(this);
+		this.view = new BoardView(this);
 
 		// Start
 		this.tick();
@@ -65,7 +66,7 @@ public class GameController implements IGameController {
 	public IPlayer white() {
 		return this.white;
 	}
-	
+
 	/**
 	 * Returns information about the stone at index n.
 	 * 
@@ -75,31 +76,42 @@ public class GameController implements IGameController {
 	public Field field(int n) {
 		return this.game.field(n);
 	}
-	
+
 	/**
-	 * Returns the active stone integer.
-	 * 
-	 * @return
+	 * Returns the active stone integer. 
 	 */
 	public Integer active() {
 		return this.active;
 	}
-	
+
 	/**
 	 * Returns the size of the game.
-	 * @return
 	 */
 	public int size() {
 		return this.game.size();
 	}
+
+	/**
+	 * Returns the player that is currently on turn.
+	 */
+	public Igra.Player player() {
+		return this.game.player();
+	}
 	
+	/**
+	 * Returns the state of the game.
+	 */
+	public GameState state() {
+		return this.game.state();
+	}
+
 	/**
 	 * Returns the view of the game.
 	 */
 	public JPanel panel() {
-		return this.view;
+		return this.view.board();
 	}
-	
+
 	// MARK: - Methods
 
 	/**
@@ -110,13 +122,15 @@ public class GameController implements IGameController {
 		if (this.game.state() == GameState.IN_PROGRESS) {
 			switch (this.game.player()) {
 			case Black:
-				this.black.move(this);
+				this.white.release();
+				this.black.take(this);
 				break;
 			case White:
-				this.white.move(this);
+				this.black.release();
+				this.white.take(this);
+				break;
 			}
 		}
-
 	}
 
 	// MARK: - IGameViewController
@@ -129,26 +143,31 @@ public class GameController implements IGameController {
 
 	@Override
 	public boolean confirm() {
+		// Make a move in the model.
 		if (this.active == null)
 			return false;
 
 		boolean successful = this.game.play(active);
 
-		//
+		// Reset the view.
+		this.active = null;
 		this.view.repaint();
-		if (successful)
+
+		if (successful) {
+			// Start the next turn.
 			this.tick();
+		}
 
 		return successful;
 	}
 
 	@Override
-	public Igra state() {
+	public Igra game() {
 		return this.game;
 	}
 
 	@Override
-	public IGameViewInfo view() {
+	public IGameView view() {
 		return this.view;
 	}
 

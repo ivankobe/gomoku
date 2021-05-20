@@ -1,36 +1,54 @@
 package controller;
 
 import logika.Igra;
-
-/**
- * Specifies the methods available for the player to use to communicate with the game.
- */
+import logika.Igra.Field;
+import logika.Igra.GameState;
 
 public interface IGameController {
 	/**
-	 * Sets the active stone.
+	 * Returns the black player in the game.
+	 * 
+	 * @return
+	 */
+	public IPlayer black();
+
+	/**
+	 * Returns the white player of the game.
+	 * 
+	 * @return
+	 */
+	public IPlayer white();
+	
+	/**
+	 * Returns the currently active player.
+	 * 
+	 * @return
+	 */
+	public Igra.Player player();
+	
+	/**
+	 * Returns information about the stone at index n.
 	 * 
 	 * @param n
-	 * @return boolean indecating if the move was valid.
-	 */
-	public void setActive(Integer n);
-	
-	/**
-	 * Submits the active play.
-	 */
-	public boolean confirm();
-	
-	/**
-	 * Returns the current state of the game so that the player
-	 * may investigate the best move.
 	 * @return
 	 */
-	public Igra state();
+	public Field field(int n);
 	
 	/**
-	 * Contains information about how the game is being displayed.
+	 * Returns the active stone integer.
 	 * 
 	 * @return
 	 */
-	public IGameViewInfo view();
+	public Integer active();
+	
+	/**
+	 * Returns the size of the game.
+	 * @return
+	 */
+	public int size();
+	
+	/**
+	 * Returns the state of the game.
+	 */
+	public GameState state();
 }

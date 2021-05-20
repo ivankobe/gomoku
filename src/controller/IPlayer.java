@@ -1,8 +1,10 @@
 package controller;
 
 import java.awt.Color;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
-public interface IPlayer {
+public interface IPlayer extends MouseListener, MouseMotionListener {
 	/**
 	 * Returns the name of the player.
 	 * @return
@@ -15,8 +17,12 @@ public interface IPlayer {
 	public Color color();
 	
 	/**
-	 * Called when a class, conforming to the player type
-	 * should make a move.
+	 * Called when player should take control of the game.
 	 */
-	public void move(IGameController controller);
+	public void take(ITurnController controller);
+	
+	/**
+	 * Called when the player should release the control of the move.
+	 */
+	public void release();
 }

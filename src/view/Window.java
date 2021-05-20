@@ -1,19 +1,14 @@
 package view;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 
 import controller.WindowController;
-import logika.Igra;
 
 /**
  * 
@@ -36,8 +31,6 @@ public class Window extends JFrame implements ActionListener {
 	// MARK: - Constructor
 
 	public Window(WindowController controller) {
-		super();
-		
 		this.controller = controller;
 
 		// Set up
@@ -55,19 +48,6 @@ public class Window extends JFrame implements ActionListener {
 		igra_menu.add(this.startGameMenuItem);
 		
 		this.startGameMenuItem.addActionListener(this);
-	}
-
-	// MARK: - Methods
-
-	/**
-	 * Sets the view to a given view.
-	 * @param view
-	 */
-	public void setView(JPanel view) {		
-		this.removeAll();
-		this.setLayout(new BorderLayout());
-		this.add(view);
-		this.validate();
 	}
 
 	// MARK: - Events

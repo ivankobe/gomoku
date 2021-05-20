@@ -6,13 +6,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import controller.IGameController;
+import controller.ITurnController;
 import controller.IPlayer;
-import splosno.KdoIgra;
-import view.GameView;
 
 public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
-	
+
 	private String name;
 	private Color color;
 
@@ -21,70 +19,88 @@ public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 	public Clovek(String name, Color color) {
 		this.name = name;
 		this.color = color;
-		
+
 	}
-	
+
 	// MARK: - Acceessors
-	
+
 	/**
 	 * Returns the name of the human.
 	 */
 	public String name() {
 		return this.name;
 	}
-	
+
 	/**
 	 * Returns the color of the stones.
 	 */
 	public Color color() {
 		return this.color;
 	}
-	
+
 	// MARK: - Move
-	
+
 	/**
 	 * References the controler that we may use to make selection.
 	 */
-	
-	private IGameController controller;
-	
+
+	private ITurnController controller;
+
 	@Override
-	public void move(IGameController controller) {
+	/**
+	 * Starts the move of the human player.
+	 */
+	public void take(ITurnController controller) {
 		this.controller = controller;
+		System.out.println(this.name + " in control");
 	}
 	
+	/**
+	 * Releases the control of the game.
+	 */
+	public void release() {
+		this.controller = null;
+		System.out.println(this.name + " releasing control");
+	}
+
 	// MARK: - Events
-	
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		this.controller.confirm();	
+		System.out.println(this.name + " pressed");
+		// Check that we have the control.
+		if (this.controller == null)
+			return;
+
+		// Submit.
+		this.controller.confirm();
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// Check that we have the control.
-		if (this.controller == null) return;
-		
-		// Reset the current state.
-		this.controller.setActive(null);
-
 		// Input Data
 		int x = e.getX();
 		int y = e.getY();
-		
+
+		// Check that we have the control.
+		if (this.controller == null)
+			return;
+
+		// Reset the current state.
+		this.controller.setActive(null);
+
 		// Stones
-		for (int n: this.controller.state().validMoves()) {
+		for (int n : this.controller.game().validMoves()) {
 			Point coord = this.controller.view().point(n);
-			
+
 			if (d(coord.x, coord.y, x, y) < 10) {
-				this.controller.setActive(null);
+				this.controller.setActive(n);
 			}
 		}
 	}
 
 	// MARK: - Utility functions
-	
+
 	/**
 	 * Calculates the distance from point (a, b) to (x, y).
 	 * 

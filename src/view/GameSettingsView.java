@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import controller.IGameSettingsController;
 import logika.GameSettings;
 import logika.Player;
 
@@ -29,45 +30,55 @@ import logika.Player;
 public class GameSettingsView extends JPanel implements ActionListener {
 
 	// MARK: - State
-	
-	private GameSettings settings;
-	
+
+	private IGameSettingsController controller;
+
 	// MARK: - Components
-	
+
 	private PlayerSettingsView white;
 	private PlayerSettingsView black;
-	
+
 	private JButton start;
 
 	// MARK: - Constructor
 
-	public GameSettingsView(GameSettings settings) {
+	public GameSettingsView(IGameSettingsController controller) {
 		super();
 
 		// State
-		this.settings = settings;
+		this.controller = controller;
 
 		// Layout
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		
-		this.add(new JLabel("GOMOKU"));
-		
+
 		JPanel players = new JPanel();
 		players.setLayout(new BoxLayout(players, BoxLayout.X_AXIS));
 
-		this.white = new PlayerSettingsView(this.settings.white);
-		this.black = new PlayerSettingsView(this.settings.black);
-		
+		GameSettings settings = controller.settings();
+		this.white = new PlayerSettingsView(settings.white);
+		this.black = new PlayerSettingsView(settings.black);
+
 		players.add(this.white);
 		players.add(this.black);
-		
+
 		this.add(players);
-		
+
 		this.start = this.button(this, "Začni");
 	}
 
+	// MARK: - Events
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object source = e.getSource();
+
+		if (source == this.start) {
+			this.controller.start();
+		}
+	}
+
 	// MARK: - View
-	
+
 	/**
 	 * Adds a new button to the panel with a given label.
 	 * 
@@ -83,29 +94,18 @@ public class GameSettingsView extends JPanel implements ActionListener {
 
 		return button;
 	}
-
-	// MARK: - Events
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object source = e.getSource();
-		
-		if (source == this.start) {
-			
-		}
-	}
 }
 
 // MARK: - Player
 
 @SuppressWarnings("serial")
-class PlayerSettingsView extends JPanel implements ActionListener, ChangeListener, ItemListener {
+class PlayerSettingsView extends JPanel implements ActionListener, ColorView.Delegate, ItemListener {
 
 	private Player player;
 
 	private JTextField name;
 	private JCheckBox computer;
-	private JColorChooser color;
+	private ColorView color;
 
 	// MARK: - Constructor
 
@@ -134,43 +134,20 @@ class PlayerSettingsView extends JPanel implements ActionListener, ChangeListene
 	}
 
 	public void itemStateChanged(ItemEvent e) {
-		Object source = e.getItemSelectable();
-
-		// Sources
-		if (source == this.computer) {
-			this.player.computer = e.getStateChange() == ItemEvent.SELECTED;
-		}
-
-//		this.repaint();
-	}
-
-	public void stateChanged(ChangeEvent e) {
 		Object source = e.getSource();
 
 		// Sources
-		if (source == this.color) {
-			this.player.color = this.color.getColor();
+		if (source == this.computer) {
+			System.out.print(e.getStateChange());
+			this.player.computer = e.getStateChange() == ItemEvent.SELECTED;
 		}
+	}
 
-//		this.repaint();
+	public void colorChanged(Color color) {
+		this.player.color = color;
 	}
 
 	// MARK: - Methods
-
-	/**
-	 * Creates a new label and adds it to the view.
-	 * 
-	 * @param panel
-	 * @param label
-	 * @return
-	 */
-	private JLabel label(JPanel panel, String label) {
-		JLabel component = new JLabel(label);
-
-		panel.add(component);
-
-		return component;
-	}
 
 	/**
 	 * Creates a new checkbox with a label.
@@ -183,7 +160,7 @@ class PlayerSettingsView extends JPanel implements ActionListener, ChangeListene
 		JCheckBox box = new JCheckBox(label);
 
 		box.setSelected(false);
-		box.addActionListener(this);
+		box.addItemListener(this);
 		panel.add(box);
 
 		return box;
@@ -214,12 +191,9 @@ class PlayerSettingsView extends JPanel implements ActionListener, ChangeListene
 	 * @param label
 	 * @return
 	 */
-	private JColorChooser color(JPanel panel, Color init, String label) {
-		JColorChooser chooser = new JColorChooser(init);
-
-		chooser.getSelectionModel().addChangeListener(this);
+	private ColorView color(JPanel panel, Color init, String label) {
+		ColorView chooser = new ColorView(label, init, this);
 		panel.add(chooser);
-
 		return chooser;
 	}
 }
