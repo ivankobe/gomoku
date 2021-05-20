@@ -8,6 +8,10 @@ import controller.WindowController;
 public class Gomoku {
 	public static void main(String[] args) {
 		WindowController controller = new WindowController();
+		
+		// Start with settings screen.
+		controller.setup();
+		
 		controller.show();
 	}
 }

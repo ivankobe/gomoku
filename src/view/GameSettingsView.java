@@ -1,6 +1,8 @@
 package view;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -9,12 +11,8 @@ import java.awt.event.ItemListener;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import controller.IGameSettingsController;
 import logika.GameSettings;
@@ -49,20 +47,16 @@ public class GameSettingsView extends JPanel implements ActionListener {
 		this.controller = controller;
 
 		// Layout
+		this.setPreferredSize(new Dimension(500, 100));
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-		JPanel players = new JPanel();
-		players.setLayout(new BoxLayout(players, BoxLayout.X_AXIS));
 
 		GameSettings settings = controller.settings();
 		this.white = new PlayerSettingsView(settings.white);
 		this.black = new PlayerSettingsView(settings.black);
 
-		players.add(this.white);
-		players.add(this.black);
-
-		this.add(players);
-
+		this.add(this.white);
+		this.add(this.black);
+		
 		this.start = this.button(this, "Začni");
 	}
 
@@ -113,11 +107,12 @@ class PlayerSettingsView extends JPanel implements ActionListener, ColorView.Del
 		this.player = player;
 
 		// Layout
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		FlowLayout layout = new FlowLayout();
+		this.setLayout(layout);
 
+		this.color = this.color(this, this.player.color, "Barva");
 		this.name = this.input(this, this.player.name, "Ime");
 		this.computer = this.checkbox(this, "Računalnik");
-		this.color = this.color(this, this.player.color, "Barva");
 	}
 
 	// MARK: - Events

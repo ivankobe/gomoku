@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import javax.swing.SwingWorker;
 
 import controller.ITurnController;
 import controller.IPlayer;
@@ -113,10 +116,10 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 */
 	Koordinati izberiPotezo(Igra igra) {
 		int n = this.calculate(igra);
-		
+
 		int x = n % igra.size();
 		int y = n / igra.size();
-		
+
 		return new Koordinati(x, y);
 	}
 
@@ -125,16 +128,37 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 */
 	@Override
 	public void take(ITurnController controller) {
-		int n = this.calculate(controller.game());
-		
-		controller.setActive(n);
-		
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-		}
-		
-		controller.confirm();
+		// Save the initial state of the game.
+		Igra game = controller.game();
+
+		SwingWorker<Integer, Void> worker = new SwingWorker<Integer, Void>() {
+			@Override
+			protected Integer doInBackground() {
+				int n = calculate(controller.game());
+
+				return n;
+			}
+
+			@Override
+			protected void done() {
+				Integer n = null;
+
+				try {
+					n = get();
+				} catch (Exception e) {
+				}
+
+				if (controller.game() != game)
+					return;
+
+				controller.setActive(n);
+				controller.confirm();
+
+			}
+		};
+
+		// Start executing.
+		worker.execute();
 	}
 
 	/**

@@ -27,9 +27,6 @@ public class BoardView extends JPanel implements IGameView {
 
 	public BoardView(IGameController controller) {
 		this.controller = controller;
-		this.setFocusable(true);
-
-		this.setPreferredSize(new Dimension(500, 500));
 	}
 
 	// MARK: - View
@@ -90,6 +87,49 @@ public class BoardView extends JPanel implements IGameView {
 		}
 	}
 
+	// MARK: - Accessors
+
+	@Override
+	public Dimension getPreferredSize() {
+		int size = 500;
+		return new Dimension(size, size);
+	}
+
+	@Override
+	public JPanel board() {
+		return this;
+	}
+
+	/**
+	 * Returns the x and y coordinate of the center of the point with index n on the
+	 * screen. We try to get max spacing for the points considering the padding and
+	 * the size of the window.
+	 * 
+	 * @param n
+	 * @return A pair of coordinates.
+	 */
+	public Point point(int n) {
+		int width = this.getWidth();
+		int height = this.getHeight();
+
+		int container = Math.min(width, height);
+		int spacing = this.spacing();
+
+		int x = n % this.controller.size();
+		int y = n / this.controller.size();
+
+		/**
+		 * We calculate the center of the stone by considering all the margins from the
+		 * left-top border.
+		 */
+		int cx = Math.max((width - container) / 2, 0) + PADDING + (spacing / 2) + x * spacing;
+		int cy = Math.max((height - container) / 2, 0) + PADDING + (spacing / 2) + y * spacing;
+
+		return new Point(cx, cy);
+	}
+
+	// MARK: - Utility functions
+
 	/**
 	 * Make a color brighten.
 	 * 
@@ -123,36 +163,4 @@ public class BoardView extends JPanel implements IGameView {
 		return (container - 2 * PADDING) / this.controller.size();
 	}
 
-	/**
-	 * Returns the x and y coordinate of the center of the point with index n on the
-	 * screen. We try to get max spacing for the points considering the padding and
-	 * the size of the window.
-	 * 
-	 * @param n
-	 * @return A pair of coordinates.
-	 */
-	public Point point(int n) {
-		int width = this.getWidth();
-		int height = this.getHeight();
-
-		int container = Math.min(width, height);
-		int spacing = this.spacing();
-
-		int x = n % this.controller.size();
-		int y = n / this.controller.size();
-
-		/**
-		 * We calculate the center of the stone by considering all the margins from the
-		 * left-top border.
-		 */
-		int cx = Math.max((width - container) / 2, 0) + PADDING + (spacing / 2) + x * spacing;
-		int cy = Math.max((height - container) / 2, 0) + PADDING + (spacing / 2) + y * spacing;
-
-		return new Point(cx, cy);
-	}
-
-	@Override
-	public JPanel board() {
-		return this;
-	}
 }

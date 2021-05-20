@@ -5,7 +5,6 @@ import javax.swing.JPanel;
 import logika.Igra;
 import logika.Igra.GameState;
 import logika.Igra.Field;
-import view.BoardView;
 import view.GameView;
 
 /**
@@ -41,7 +40,7 @@ public class GameController implements ITurnController, IGameController {
 		this.white = white;
 
 		this.game = new Igra();
-		this.view = new BoardView(this);
+		this.view = new GameView(this);
 
 		// Start
 		this.tick();
@@ -136,12 +135,18 @@ public class GameController implements ITurnController, IGameController {
 	// MARK: - IGameViewController
 
 	@Override
+	/**
+	 * Mark a stone as active. Use `confirm` to finish the turn.
+	 */
 	public void setActive(Integer n) {
 		this.active = n;
 		this.view.repaint();
 	}
 
 	@Override
+	/**
+	 * Confirm the pick.
+	 */
 	public boolean confirm() {
 		// Make a move in the model.
 		if (this.active == null)
@@ -162,11 +167,17 @@ public class GameController implements ITurnController, IGameController {
 	}
 
 	@Override
+	/**
+	 * Returns the game state.
+	 */
 	public Igra game() {
 		return this.game;
 	}
 
 	@Override
+	/**
+	 * Returns the view information.
+	 */
 	public IGameView view() {
 		return this.view;
 	}

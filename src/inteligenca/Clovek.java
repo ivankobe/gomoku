@@ -52,7 +52,7 @@ public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 	 */
 	public void take(ITurnController controller) {
 		this.controller = controller;
-		System.out.println(this.name + " in control");
+//		System.out.println(this.name + " in control");
 	}
 	
 	/**
@@ -60,14 +60,13 @@ public class Clovek implements IPlayer, MouseListener, MouseMotionListener {
 	 */
 	public void release() {
 		this.controller = null;
-		System.out.println(this.name + " releasing control");
+//		System.out.println(this.name + " releasing control");
 	}
 
 	// MARK: - Events
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		System.out.println(this.name + " pressed");
 		// Check that we have the control.
 		if (this.controller == null)
 			return;

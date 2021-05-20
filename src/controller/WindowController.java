@@ -31,8 +31,6 @@ public class WindowController implements IGameSettingsController {
 		this.game = null;
 		this.settings = new GameSettings();
 		this.window = new Window(this);
-
-		this.setup();
 	}
 
 	// MARK: - Views
