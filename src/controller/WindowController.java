@@ -77,7 +77,6 @@ public class WindowController implements IGameSettingsController {
 	 * @return
 	 */
 	private IPlayer player(Player settings) {
-		System.out.print(settings.computer);
 		IPlayer player;
 		if (settings.computer)
 			player = new Inteligenca(settings.name, settings.color);

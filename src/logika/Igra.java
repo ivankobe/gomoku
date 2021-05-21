@@ -213,7 +213,7 @@ public class Igra {
 
 		this.size = 15;
 
-		empties.set(0, 225); // bb and bw are initially empty, be is initially full.
+		this.empties.set(0, 225); // bb and bw are initially empty, be is initially full.
 
 		this.player = starting;
 
@@ -226,19 +226,7 @@ public class Igra {
 		/**
 		 * By default, black is first to move and the board is 15x15.
 		 */
-		this.blacks = new BitSet(225);
-		this.whites = new BitSet(225);
-		this.empties = new BitSet(225);
-
-		this.size = 15;
-
-		empties.set(0, 225); // bb and bw are initially empty, be is initially full.
-
-		this.player = Player.Black;
-
-		this.hash = 0;
-
-		this.candidates = new HashSet<Integer>();
+		this(Player.White, 15);
 	}
 
 	public Igra(Igra game) {
@@ -287,6 +275,7 @@ public class Igra {
 	 * @return A boolean whether the move is valid.
 	 */
 	public boolean isValidMove(int n) {
+
 		if (n >= 225 || n < 0)
 			return false;
 		return this.validMoves().contains(n);
@@ -305,8 +294,9 @@ public class Igra {
 
 		int n = this.size() * this.size();
 		for (int i = 0; i < n; i++) {
-			if (this.field(n) == Field.EMPTY)
+			if (this.empties.get(i))
 				moves.add(i);
+
 		}
 		return moves;
 	}
@@ -323,7 +313,7 @@ public class Igra {
 			return false;
 
 		// Update the board.
-		System.out.println(move + " " + this.player);
+//		System.out.println(move + " played " + this.player);
 		if (this.player == Player.Black)
 			this.blacks.set(move);
 		else

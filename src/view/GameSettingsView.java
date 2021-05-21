@@ -133,7 +133,6 @@ class PlayerSettingsView extends JPanel implements ActionListener, ColorView.Del
 
 		// Sources
 		if (source == this.computer) {
-			System.out.print(e.getStateChange());
 			this.player.computer = e.getStateChange() == ItemEvent.SELECTED;
 		}
 	}
