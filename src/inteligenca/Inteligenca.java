@@ -892,13 +892,14 @@ class Evaluator {
                     continue;   
                 }
                 else {
-                    Scanner in = new Scanner(System.in);
-                    int x = in.nextInt();
-                    int y = in.nextInt();
-                    game.play(x + 15 * y);
+                    long start = System.currentTimeMillis();
+                    int move = bot.calculate(game); // If depth were three, move-selection would take far longer than 5 seconds
+                    long end = System.currentTimeMillis();
+                    game.play(move);
                     System.out.println(game);
+                    System.out.println(end - start);                    
                     flag = true;
-                    continue;
+                    continue;   
                 }
             }
         }
