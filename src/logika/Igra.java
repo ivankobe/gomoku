@@ -226,7 +226,7 @@ public class Igra {
 		/**
 		 * By default, black is first to move and the board is 15x15.
 		 */
-		this(Player.White, 15);
+		this(Player.Black, 15);
 	}
 
 	public Igra(Igra game) {
