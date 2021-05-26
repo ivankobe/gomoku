@@ -68,8 +68,6 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	private Map<Long, Integer> transpositionTableBlack;
 	private Map<Long, Integer> transpositionTableWhite;
 
-	private final static int maxDepth = 2;
-
 	// MARK: - State
 
 	private Color color;
@@ -193,13 +191,18 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		}
 		// Else, apply the minimax algorithm the the game.
 		else {
-			EvaluatedMove bestMoveFirstPly = minimaxAB(game, 1, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), 5000);
-			long timeElapsed = System.currentTimeMillis() - startTime;
-			EvaluatedMove bestMoveSecondPly = minimaxAB(game, 2, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), 5000 - timeElapsed);
-			if (bestMoveSecondPly == null) {
-				return bestMoveFirstPly.move();
+			EvaluatedMove bestMove = minimaxAB(game, 1, 1, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), 5000);
+			for (int i = 2; i <= 4; i++) {
+				long timeElapsed = System.currentTimeMillis() - startTime;
+				EvaluatedMove deeper = minimaxAB(game, i, i, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), 5000 - timeElapsed);
+				if (deeper == null) {
+					break;
+				}
+				else {
+					bestMove = deeper;
+				}
 			}
-			return bestMoveSecondPly.move();
+			return bestMove.move();
 		}
 	}
 
@@ -249,7 +252,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 *               initialized as game.toplay()
 	 * @return
 	 */
-	private EvaluatedMove minimaxAB(Igra game, int depth, Integer alpha, Integer beta, Player player, long timeLeft) {
+	private EvaluatedMove minimaxAB(Igra game, int depth, int maxDepth, Integer alpha, Integer beta, Player player, long timeLeft) {
 		long startTime = System.currentTimeMillis();
 		// Retrieve the appropriate transposition table
 		Map<Long, Integer> transpositionTable = this.getTranspositionTable(player);
@@ -302,7 +305,15 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		// Transform the set of candidates into a list (for sorting)
 		List<Integer> sorted = new ArrayList<Integer>(candidates);
 		// Sort the list
-		sorted.sort((x, y) -> evaluations.get(y).compareTo(evaluations.get(x))); // Yay, lambda expressions!
+		if (game.player() == player) {
+			sorted.sort((x, y) -> evaluations.get(y).compareTo(evaluations.get(x))); // Yay, lambda expressions!
+		}
+		else {
+			sorted.sort((x, y) -> evaluations.get(x).compareTo(evaluations.get(y))); // Yay, lambda expressions!
+		}
+		if (depth != maxDepth) {
+			sorted = sorted.stream().limit(8).collect(Collectors.toList());
+		}
 		int bestMove = sorted.get(0); // Start with the best candidate
 		for (int move : sorted) {
 			if (depth == maxDepth && System.currentTimeMillis() - startTime > timeLeft) {
@@ -318,7 +329,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 			}
 			// Else, make a recursive call
 			else {
-				eval = minimaxAB(clone, depth - 1, alpha, beta, player, timeLeft - (System.currentTimeMillis() - startTime)).eval();
+				eval = minimaxAB(clone, depth - 1, maxDepth, alpha, beta, player, timeLeft - (System.currentTimeMillis() - startTime)).eval();
 			}
 			// Maximizer
 			if (game.player() == player) {
