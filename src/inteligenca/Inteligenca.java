@@ -166,7 +166,6 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 * Chooses the best move it can find using iterative deepening search.
 	 */
 	public int calculate(Igra game) {
-		long startTime = System.currentTimeMillis();
 		// Check that the gamestate is not terminal
 		if (game.state() != GameState.IN_PROGRESS) {
 			throw new IllegalArgumentException("Position is terminal. I cannot choose a move!");
@@ -191,18 +190,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		}
 		// Else, apply the minimax algorithm the the game.
 		else {
-			EvaluatedMove bestMove = minimaxAB(game, 1, 1, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), 5000);
-			for (int i = 2; i <= 4; i++) {
-				long timeElapsed = System.currentTimeMillis() - startTime;
-				EvaluatedMove deeper = minimaxAB(game, i, i, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player(), 5000 - timeElapsed);
-				if (deeper == null) {
-					break;
-				}
-				else {
-					bestMove = deeper;
-				}
-			}
-			return bestMove.move();
+			return minimaxAB(game, 2, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
 		}
 	}
 
@@ -252,8 +240,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 *               initialized as game.toplay()
 	 * @return
 	 */
-	private EvaluatedMove minimaxAB(Igra game, int depth, int maxDepth, Integer alpha, Integer beta, Player player, long timeLeft) {
-		long startTime = System.currentTimeMillis();
+	private EvaluatedMove minimaxAB(Igra game, int depth, Integer alpha, Integer beta, Player player) {
 		// Retrieve the appropriate transposition table
 		Map<Long, Integer> transpositionTable = this.getTranspositionTable(player);
 		// If @player is the maximizer, the starting maxEval is negative "infinity",
@@ -270,9 +257,6 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		Map<Integer, Igra> clonedGames = new HashMap<Integer, Igra>();
 		// Evaluate each candidate
 		for (int move : candidates) {
-			if (depth == maxDepth && System.currentTimeMillis() - startTime > timeLeft) {
-				return null;
-			}
 			// Copy the game
 			Igra gameCopy = new Igra(game);
 			// Apply move
@@ -311,14 +295,8 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		else {
 			sorted.sort((x, y) -> evaluations.get(x).compareTo(evaluations.get(y))); // Yay, lambda expressions!
 		}
-		if (depth != maxDepth) {
-			sorted = sorted.stream().limit(8).collect(Collectors.toList());
-		}
 		int bestMove = sorted.get(0); // Start with the best candidate
 		for (int move : sorted) {
-			if (depth == maxDepth && System.currentTimeMillis() - startTime > timeLeft) {
-				return null;
-			}
 			// Retrieve the cloned game
 			Igra clone = clonedGames.get(move);
 			Integer eval;
@@ -329,7 +307,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 			}
 			// Else, make a recursive call
 			else {
-				eval = minimaxAB(clone, depth - 1, maxDepth, alpha, beta, player, timeLeft - (System.currentTimeMillis() - startTime)).eval();
+				eval = minimaxAB(clone, depth - 1, alpha, beta, player).eval();
 			}
 			// Maximizer
 			if (game.player() == player) {
@@ -480,8 +458,8 @@ class Evaluator {
 		scores.put("live four", 10000);
 		scores.put("open three", 5000);
 		scores.put("broken three", 5000);
-		scores.put("dead four", 2000);
-		scores.put("closed three", 200);
+		scores.put("dead four",3000);
+		scores.put("closed three", 1000);
 		scores.put("two", 10);
 	}
 
@@ -903,13 +881,12 @@ class Evaluator {
                     continue;   
                 }
                 else {
-                    long start = System.currentTimeMillis();
-                    int move = bot.calculate(game); // If depth were three, move-selection would take far longer than 5 seconds
-                    long end = System.currentTimeMillis();
-                    game.play(move);
-                    System.out.println(game);
-                    System.out.println(end - start);                    
-                    flag = true;
+					Scanner in = new Scanner(System.in);
+                    int col = in.nextInt();
+					int row = in.nextInt();
+					game.play(col + 15 * row);
+					// in.close();
+					flag = true;
                     continue;   
                 }
             }
