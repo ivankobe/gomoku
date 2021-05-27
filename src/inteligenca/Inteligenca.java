@@ -190,7 +190,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		}
 		// Else, apply the minimax algorithm the the game.
 		else {
-			return minimaxAB(game, 2, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
+			return minimaxAB(game, 3, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
 		}
 	}
 
@@ -294,6 +294,9 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 		}
 		else {
 			sorted.sort((x, y) -> evaluations.get(x).compareTo(evaluations.get(y))); // Yay, lambda expressions!
+		}
+		if (depth != 3) {
+			sorted = sorted.stream().limit(8).collect(Collectors.toList());
 		}
 		int bestMove = sorted.get(0); // Start with the best candidate
 		for (int move : sorted) {
@@ -849,48 +852,5 @@ class Evaluator {
 		int minus = evaluateSingleSidedNonterminal(player.next());
 		return plus - minus;
 	}
-
-	public static void main(String[] args) {
-        Igra game = new Igra();
-        Inteligenca bot = new Inteligenca("bla", Color.black);
-        boolean flag = false;
-        System.out.println(game);
-        while (true) {
-            GameState state = game.state();
-            if (state == GameState.WIN_Black) {
-                System.out.println("X has won!");
-                break;
-            }
-            else if (state == GameState.WIN_White) {
-                System.out.println("O has won!");
-                break;
-            }
-            else if (state == GameState.DRAW) {
-                System.out.println("Draw!");
-                break;
-            }
-            else {
-                if (flag) {
-                    long start = System.currentTimeMillis();
-                    int move = bot.calculate(game); // If depth were three, move-selection would take far longer than 5 seconds
-                    long end = System.currentTimeMillis();
-                    game.play(move);
-                    System.out.println(game);
-                    System.out.println(end - start);                    
-                    flag = false;
-                    continue;   
-                }
-                else {
-					Scanner in = new Scanner(System.in);
-                    int col = in.nextInt();
-					int row = in.nextInt();
-					game.play(col + 15 * row);
-					// in.close();
-					flag = true;
-                    continue;   
-                }
-            }
-        }
-    }
 
 }
