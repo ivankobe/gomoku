@@ -11,11 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.swing.SwingWorker;
 
@@ -36,37 +33,30 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	// MARK: - Static
 
 	/**
-	 * Computer player.
+	 * Scores for the game outcome.
 	 */
+	static final int WIN = 1000000;
+	static final int LOSE = -WIN;
+	static final int DRAW = 0;
 
 	/**
-	 * Since evaluation of non-terminal and terminal positions should be independent
-	 * of each other, the latter are stored seperately.
-	 */
-	private static final Map<String, Integer> scores;
-
-	/**
-	 * The scores for win and lose are symmetric. The score for draw is 0.
-	 */
-	static {
-		scores = new HashMap<String, Integer>();
-		scores.put("win", 1000000);
-		scores.put("lose", -1000000);
-		scores.put("draw", 0);
-	}
-
-	/**
-	 * A transposition table to store static evaluations of already seen positions
-	 * in. This way we prevent evaluating the same position (at which one can arrive
+	 * A transposition table to store static evaluations of already seen positions.
+	 * 
+	 * This way we prevent evaluating the same position (at which one can arrive
 	 * with different sequences of moves) more than once. We need two transposition
 	 * tables, once for when computer is playing black and one for when it is
-	 * playing white. In a single game, a single table would suffice, since scores
-	 * are always calculated for the same player, however, the same Bot object is
-	 * meant to be used in several games (in order to accumulate as big
-	 * transposition tables as possible).
+	 * playing white.
+	 * 
+	 * In a single game, a single table would suffice, since scores are always
+	 * calculated for the same player, however, the same Bot object is meant to be
+	 * used in several games (in order to accumulate as big transposition tables as
+	 * possible).
+	 * 
+	 * Calculations are deterministic, that's why we can share results between
+	 * iterations.
 	 */
-	private Map<Long, Integer> transpositionTableBlack;
-	private Map<Long, Integer> transpositionTableWhite;
+	static private Map<Long, Integer> transpositionTableBlack = new HashMap<Long, Integer>();
+	static private Map<Long, Integer> transpositionTableWhite = new HashMap<Long, Integer>();
 
 	// MARK: - State
 
@@ -76,10 +66,7 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 
 	public Inteligenca(String ime, Color color) {
 		super(ime);
-
 		this.color = color;
-		this.transpositionTableBlack = new HashMap<Long, Integer>();
-		this.transpositionTableWhite = new HashMap<Long, Integer>();
 	}
 
 	// MARK: - Accessors
@@ -157,7 +144,6 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 * Releases the control of the game.
 	 */
 	public void release() {
-
 	}
 
 	// MARK: - Minimax
@@ -166,65 +152,26 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 * Chooses the best move it can find using iterative deepening search.
 	 */
 	public int calculate(Igra game) {
-		// Check that the gamestate is not terminal
+		// Check that the gamestate is not terminal.
 		if (game.state() != GameState.IN_PROGRESS) {
 			throw new IllegalArgumentException("Position is terminal. I cannot choose a move!");
 		}
-		// If this is the first move, play at the center.
-		else if (game.getEmpties().cardinality() == 225) {
+
+		// If this is the first move, play at the center. Check that the move is valid.
+		if (game.getEmpties().cardinality() >= 224) {
 			Random rand = new Random();
 			int[] center = { 6 + 6 * 15, 7 + 6 * 15, 8 + 6 * 15, 6 + 7 * 15, 7 + 7 * 15, 8 + 7 * 15, 6 + 8 * 15,
-					7 + 8 * 15, 8 + 8 * 15, };
-			return center[rand.nextInt(center.length)];
-		}
-		// If this is the second move, also play at the center.
-		else if (game.getEmpties().cardinality() == 224) {
-			Random rand = new Random();
-			int[] center = { 6 + 6 * 15, 7 + 6 * 15, 8 + 6 * 15, 6 + 7 * 15, 7 + 7 * 15, 8 + 7 * 15, 6 + 8 * 15,
-					7 + 8 * 15, 8 + 8 * 15, };
+					7 + 8 * 15, 8 + 8 * 15 };
+
 			while (true) {
 				int choice = center[rand.nextInt(center.length)];
-				if (game.getEmpties().get(choice))
+				if (game.isValidMove(choice))
 					return choice;
 			}
 		}
-		// Else, apply the minimax algorithm the the game.
-		else {
-			return minimaxAB(game, 3, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
-		}
-	}
 
-	/**
-	 * Retrieve the appropriate transposition table
-	 * 
-	 * @param player
-	 * @return
-	 */
-	private Map<Long, Integer> getTranspositionTable(Player player) {
-		return (player == Player.Black) ? this.transpositionTableBlack : this.transpositionTableWhite;
-	}
-
-	/**
-	 * A custom class describing evaluated moves, basically a pair (move,
-	 * evaluation)
-	 */
-	class EvaluatedMove {
-
-		private int move;
-		private int eval;
-
-		public EvaluatedMove(int move, int eval) {
-			this.move = move;
-			this.eval = eval;
-		}
-
-		public int move() {
-			return this.move;
-		}
-
-		public int eval() {
-			return this.eval;
-		}
+		// Perform calculation otherwise.
+		return minimaxAB(game, 3, -Integer.MAX_VALUE, Integer.MAX_VALUE, game.player()).move();
 	}
 
 	/**
@@ -238,80 +185,89 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 	 * @param beta   To be initialized as positive infinity
 	 * @param player Whether it is a minimizing or a maximizing branch. To be
 	 *               initialized as game.toplay()
-	 * @return
+	 * @return An evaluated move containing the play and its score.
 	 */
 	private EvaluatedMove minimaxAB(Igra game, int depth, Integer alpha, Integer beta, Player player) {
-		// Retrieve the appropriate transposition table
-		Map<Long, Integer> transpositionTable = this.getTranspositionTable(player);
+
+		// Get the relevant transposition table.
+		Map<Long, Integer> transpositionTable;
+
+		if (player == Player.Black)
+			transpositionTable = transpositionTableBlack;
+		else
+			transpositionTable = transpositionTableWhite;
+
 		// If @player is the maximizer, the starting maxEval is negative "infinity",
 		// and if @player is the minimizer, the starting maxEval is "negative infinity".
 		Integer maxEval = (game.player() == player) ? -Integer.MAX_VALUE : Integer.MAX_VALUE;
-		// Search only moves that are not too far from stones that are already on the
-		// board
-		Set<Integer> candidates = game.candidates();
-		// A map for storing the evaluations of child nodes
+
+		// A map for storing the evaluations of plays.
+		// Play is the key, evaluation is the value.
 		Map<Integer, Integer> evaluations = new HashMap<Integer, Integer>();
-		// Since, for evaluation of a child node, the game must be copied,
-		// the copied games are stored in a map so as to avoid having to
-		// copy each game twice
+
+		// Games are stored in a map to avoid copying each game twice.
 		Map<Integer, Igra> clonedGames = new HashMap<Integer, Igra>();
-		// Evaluate each candidate
+
+		// Evaluate moves that are close to stones on the board.
+		Set<Integer> candidates = game.candidates();
+
 		for (int move : candidates) {
-			// Copy the game
-			Igra gameCopy = new Igra(game);
-			// Apply move
-			gameCopy.play(move);
-			// If this board was already evaluated, retrieve evaluation from table
-			Integer staticEvaluation = transpositionTable.get(gameCopy.hash());
-			// If not, calculate static evaluation and store it in the table for future
-			// reference
+			Igra copy = new Igra(game);
+			copy.play(move);
+
+			// Try to fetch the cache of the evaluation.
+			Integer staticEvaluation = transpositionTable.get(copy.hash());
+
+			// If there's no evaluation yet, create a new evaluation for this game.
 			if (staticEvaluation == null) {
-				GameState state = gameCopy.state();
-				if ((state == GameState.WIN_Black && player == Player.Black)
-						|| (state == GameState.WIN_White && player == Player.White)) {
-					staticEvaluation = scores.get("win");
-				} else if ((state == GameState.WIN_Black && player == Player.White)
-						|| (state == GameState.WIN_White && player == Player.Black)) {
-					staticEvaluation = -scores.get("win");
-				} else if (state == GameState.DRAW) {
-					staticEvaluation = scores.get("draw");
-				} else {
-					Evaluator evaluator = new Evaluator(gameCopy);
-					staticEvaluation = evaluator.evaluate(player);
-				}
-				transpositionTable.put(gameCopy.hash(), staticEvaluation);
+				GameState state = copy.state();
+
+				staticEvaluation = switch (state.outcome(player)) {
+				case WIN -> WIN;
+				case DRAW -> DRAW;
+				case LOSE -> LOSE;
+				case IN_PROGRESS -> new Evaluator(copy).evaluate(player);
+				};
+
+				// Cache
+				transpositionTable.put(copy.hash(), staticEvaluation);
 			}
-			// Store the cloned game
-			clonedGames.put(move, gameCopy);
-			// Store the evaluation of child node
+
+			// Store the cloned game and the evaluation of child node.
+			clonedGames.put(move, copy);
 			evaluations.put(move, staticEvaluation);
 		}
-		// Transform the set of candidates into a list (for sorting)
+
 		List<Integer> sorted = new ArrayList<Integer>(candidates);
-		// Sort the list
+
+		// Sort the evaluations.
 		if (game.player() == player) {
-			sorted.sort((x, y) -> evaluations.get(y).compareTo(evaluations.get(x))); // Yay, lambda expressions!
+			sorted.sort((x, y) -> evaluations.get(y).compareTo(evaluations.get(x)));
+		} else {
+			sorted.sort((x, y) -> evaluations.get(x).compareTo(evaluations.get(y)));
 		}
-		else {
-			sorted.sort((x, y) -> evaluations.get(x).compareTo(evaluations.get(y))); // Yay, lambda expressions!
-		}
+
 		if (depth != 3) {
 			sorted = sorted.stream().limit(8).collect(Collectors.toList());
 		}
-		int bestMove = sorted.get(0); // Start with the best candidate
+
+		// Starting with the best candidate we evaluate each move.
+		int bestMove = sorted.get(0);
 		for (int move : sorted) {
+
 			// Retrieve the cloned game
 			Igra clone = clonedGames.get(move);
 			Integer eval;
-			// If position is terminal or maximum depth was reached, retrieve evaluation
-			// from table. We can be sure that eval != null.
-			if (!(clone.state() == GameState.IN_PROGRESS) || depth == 0) {
+
+			if (clone.state() != GameState.IN_PROGRESS || depth == 0) {
+				// If position is terminal or maximum depth was reached, retrieve evaluation
+				// from the cache.
 				eval = transpositionTable.get(clone.hash());
-			}
-			// Else, make a recursive call
-			else {
+			} else {
+				// Else, make a recursive call.
 				eval = minimaxAB(clone, depth - 1, alpha, beta, player).eval();
 			}
+
 			// Maximizer
 			if (game.player() == player) {
 				if (eval > maxEval) {
@@ -328,12 +284,42 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 					beta = Math.min(beta, maxEval);
 				}
 			}
+
 			// If position is unreachable, terminate loop and return
 			if (alpha >= beta)
 				return new EvaluatedMove(bestMove, maxEval);
-
 		}
+
 		return new EvaluatedMove(bestMove, maxEval);
+	}
+
+	class EvaluatedMove {
+
+		private int move;
+		private int eval;
+
+		public EvaluatedMove(int move, int eval) {
+			this.move = move;
+			this.eval = eval;
+		}
+
+		/**
+		 * Returns the position of the move.
+		 * 
+		 * @return
+		 */
+		public int move() {
+			return this.move;
+		}
+
+		/**
+		 * Returns the score of the move.
+		 * 
+		 * @return
+		 */
+		public int eval() {
+			return this.eval;
+		}
 	}
 
 	// MARK: - Utility functions
@@ -369,17 +355,23 @@ public class Inteligenca extends KdoIgra implements IPlayer {
 
 // MARK: - Evaluator
 
-class Evaluator {
-	/**
-	 * A class that provides static evaluation of a given position
-	 */
+/**
+ * A class that provides static evaluation of a given position
+ */
 
-	// MARK: - static fields (statically pre-computed bitmasks)
+class Evaluator {
+
+	// MARK: - Static
+
+	/**
+	 * Masks are stored in a map and indexed by pairs (direction, length)
+	 */
+	private static final Map<PairDirectionLength, BitSet> masks;
 
 	static class PairDirectionLength {
 		/**
-		 * A custom class whose instances are intended to be used as keys in a HashMap
-		 * in which BitMask objects are stored.
+		 * A custom class intended to be used as keys in a HashMap in which BitMask
+		 * objects are stored.
 		 * 
 		 * @param direction
 		 * @param length
@@ -423,17 +415,14 @@ class Evaluator {
 	}
 
 	/**
-	 * Masks are stored in a map and indexed by pairs (direction, length)
-	 */
-	private static final Map<PairDirectionLength, BitSet> masks;
-
-	/**
 	 * Inizialize @masks
 	 */
 	static {
 		masks = new HashMap<PairDirectionLength, BitSet>();
+
 		int[] inc = { 1, 14, 15, 16 }; // Search-directions
 		int[] lengths = { 2, 5, 6 }; // Lengths of patterns
+
 		for (int i : inc) {
 			for (int len : lengths) {
 				PairDirectionLength pair = new PairDirectionLength(len, i);
@@ -447,26 +436,7 @@ class Evaluator {
 	 */
 	private static final int[] inc = { 1, 14, 15, 16 };
 
-	/**
-	 * Scores for patterns, as well as for terminal positions, are stored in a
-	 * hashmap @scores. The values are purely speculative.
-	 */
-	private static final Map<String, Integer> scores;
-
-	/**
-	 * Initialize @scores
-	 */
-	static {
-		scores = new HashMap<String, Integer>();
-		scores.put("live four", 10000);
-		scores.put("open three", 5000);
-		scores.put("broken three", 5000);
-		scores.put("dead four",3000);
-		scores.put("closed three", 1000);
-		scores.put("two", 10);
-	}
-
-	// MARK: - dynamic fields
+	// MARK: - Properties
 
 	/**
 	 * The Game whose position the Evaluator is to evaluate
@@ -533,17 +503,64 @@ class Evaluator {
 		this.game = game;
 		this.cachedThrees = new HashMap<Integer, BitSet>();
 		this.cachedFours = new HashMap<Integer, BitSet>();
+
 		for (int i : inc) {
 			this.cachedThrees.put(i, null);
 			this.cachedFours.put(i, null);
 		}
 	}
 
-	// MARK: - pattern-searching
+	// MARK: - Evaluation
+
+	/**
+	 * The holistic evaluation of the board. If the return value is positive, the
+	 * position is favorable for the @player and vice versa.
+	 */
+	public int evaluate(Player player) {
+		int plus = evaluateSingleSidedNonterminal(player);
+		int minus = evaluateSingleSidedNonterminal(player.next());
+
+		return plus - minus;
+	}
+
+	/**
+	 * Evaluates the borad for a single player and resets cache.
+	 */
+	private int evaluateSingleSidedNonterminal(Player player) {
+		int eval = 0;
+
+		/**
+		 * Scores for patterns, as well as for terminal positions, are stored in a
+		 * hashmap @scores. The values are purely speculative.
+		 */
+
+		// LiveFour
+		eval += this.numLiveFours(player) * 10000;
+		// DeadFour
+		eval += this.numDeadFours(player) * 7000;
+		// OpenThree
+		eval += this.numOpenThrees(player) * 5000;
+		// BrokenThree
+		eval += this.numBrokenThrees(player) * 5000;
+		// ClosedThree
+		eval += this.numClosedThrees(player) * 1000;
+		// Two
+		eval += this.numTwos(player) * 10;
+
+		// Clear cache
+		this.clearCachedFours();
+		this.clearCachedThrees();
+
+		return eval;
+	}
+
+	// MARK: - Patterns
 
 	/**
 	 * A live four is a six-field pattern, where the four bits in the center are set
-	 * and the outer two are empty: _ X X X X _
+	 * and the outer two are empty: 
+	 * 
+	 * 1) _ X X X X _
 	 * 
 	 * @param player
 	 * @return
@@ -588,7 +605,8 @@ class Evaluator {
 	 * A dead four is a 5-stone pattern, where 4 consecutive bits are set and the
 	 * remaining bit is clear:
 	 * 
-	 * _ X X X X or X X X X _
+	 * 1) _ X X X X 
+	 * 2) X X X X _
 	 * 
 	 * It is important to note that a live four is also a double dead four. This
 	 * way, the search is computationally less demanding. This has to be taken into
@@ -638,7 +656,8 @@ class Evaluator {
 	 * A wide-open three is a three that is one move away from becoming a live four.
 	 * It is a 6-stone pattern:
 	 * 
-	 * _ X X X _ _ or _ _ X X X _
+	 * 1) _ X X X _ _ 
+	 * 2) _ _ X X X _
 	 * 
 	 * @param player
 	 * @return
@@ -689,7 +708,9 @@ class Evaluator {
 	/**
 	 * A closed three is a three which can become five but isn't a forcing move:
 	 * 
-	 * 1) X X X _ _ 2) _ X X X _ 3) _ _ X X X
+	 * 1) X X X _ _ 
+	 * 2) _ X X X _ 
+	 * 3) _ _ X X X
 	 * 
 	 * Again, it may happen, that another pattern is also counted as a closed three.
 	 * This must be taken into account when defining weights, probabbly by making
@@ -758,7 +779,8 @@ class Evaluator {
 	 * four are set and the other three are clear. A broken three is as valuable as
 	 * an open three.
 	 * 
-	 * 1) _ X X _ X _ 2) _ X _ _ X _
+	 * 1) _ X X _ X _ 
+	 * 2) _ X _ _ X _
 	 * 
 	 * @param player
 	 * @return
@@ -823,34 +845,4 @@ class Evaluator {
 		}
 		return num;
 	}
-
-	// MARK: - board evaliaton
-
-	/**
-	 * @return Evaluates the bord for a single player and resets cache.
-	 */
-	private int evaluateSingleSidedNonterminal(Player player) {
-		int eval = 0;
-		eval += this.numLiveFours(player) * scores.get("live four");
-		eval += this.numDeadFours(player) * scores.get("dead four");
-		eval += this.numOpenThrees(player) * scores.get("open three");
-		eval += this.numClosedThrees(player) * scores.get("closed three");
-		eval += this.numBrokenThrees(player) * scores.get("broken three");
-		eval += this.numTwos(player) * scores.get("two");
-		// Clear cache
-		this.clearCachedFours();
-		this.clearCachedThrees();
-		return eval;
-	}
-
-	/**
-	 * @return The holistic evaluation of the board. If the return value is
-	 *         positive, the position is favorable for the @player and vice versa.
-	 */
-	public int evaluate(Player player) {
-		int plus = evaluateSingleSidedNonterminal(player);
-		int minus = evaluateSingleSidedNonterminal(player.next());
-		return plus - minus;
-	}
-
 }

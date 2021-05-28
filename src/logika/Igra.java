@@ -400,6 +400,27 @@ public class Igra {
 
 	public enum GameState {
 		IN_PROGRESS, WIN_Black, WIN_White, DRAW;
+
+		public enum PlayerState {
+			WIN, LOSE, DRAW, IN_PROGRESS
+		}
+
+		/**
+		 * Tells how game state reflects players state.
+		 * 
+		 * @param player
+		 * @return
+		 */
+		public PlayerState outcome(Player player) {
+			PlayerState outcome = switch (this) {
+			case WIN_Black -> (player == Player.Black) ? PlayerState.WIN : PlayerState.LOSE;
+			case WIN_White -> (player == Player.White) ? PlayerState.WIN : PlayerState.LOSE;
+			case DRAW -> PlayerState.DRAW;
+			case IN_PROGRESS -> PlayerState.IN_PROGRESS;
+			};
+
+			return outcome;
+		}
 	}
 
 	/**
@@ -410,10 +431,13 @@ public class Igra {
 	public GameState state() {
 		if (this.hasWon(Player.Black))
 			return GameState.WIN_Black;
+		
 		if (this.hasWon(Player.White))
 			return GameState.WIN_White;
+		
 		if (empties.isEmpty())
 			return GameState.DRAW;
+		
 		return GameState.IN_PROGRESS;
 	}
 

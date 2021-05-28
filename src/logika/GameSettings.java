@@ -28,8 +28,8 @@ public class GameSettings {
 	 * Creates a default game setting.
 	 */
 	public GameSettings() {
-		this.white = new Player("Bel", Color.WHITE);
-		this.black = new Player("Črn", Color.BLACK);
+		this.white = new Player("Beli", Color.WHITE);
+		this.black = new Player("Črni", Color.BLACK);
 		this.size = 15;
 	}
 }
