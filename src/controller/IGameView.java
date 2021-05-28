@@ -15,6 +15,12 @@ public interface IGameView {
 	 * @return
 	 */
 	public JPanel board();
+	
+	/**
+	 * Returns the view of the game.
+	 * @return
+	 */
+	public JPanel view();
 
 	/**
 	 * Returns the point on the screen that the center of the stone
@@ -28,5 +34,5 @@ public interface IGameView {
 	/**
 	 * Rerenders the view.
 	 */
-	public void repaint();
+	public void update();
 }

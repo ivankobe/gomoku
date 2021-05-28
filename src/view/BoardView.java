@@ -27,6 +27,7 @@ public class BoardView extends JPanel implements IGameView {
 
 	public BoardView(IGameController controller) {
 		this.controller = controller;
+		this.setBackground(Color.WHITE);
 	}
 
 	// MARK: - View
@@ -77,10 +78,19 @@ public class BoardView extends JPanel implements IGameView {
 						color = this.controller.white().color();
 						break;
 					}
-					color = brighten(color, 0.10);
+					color = color.brighter();
 				}
 
 				// Draw a stone.
+				if (hardtosee(color)) {
+					/**
+					 * If a color is hard to see, we draw a black border.
+					 */
+					g.setColor(Color.GRAY);
+					g.fillOval(coord.x - r, coord.y - r, 2 * r, 2 * r);
+					r -= 1;
+				}
+				
 				g.setColor(color);
 				g.fillOval(coord.x - r, coord.y - r, 2 * r, 2 * r);
 			}
@@ -95,8 +105,19 @@ public class BoardView extends JPanel implements IGameView {
 		return new Dimension(size, size);
 	}
 
+	/**
+	 * Returns the board panel.
+	 */
 	@Override
 	public JPanel board() {
+		return this;
+	}
+	
+	/**
+	 * Returns the entire view.
+	 */
+	@Override
+	public JPanel view() {
 		return this;
 	}
 
@@ -129,25 +150,22 @@ public class BoardView extends JPanel implements IGameView {
 	}
 
 	// MARK: - Utility functions
-
+	
 	/**
-	 * Make a color brighten.
+	 * Tells whether a given color would be hard to see on the white backgorund.
 	 * 
-	 * https://stackoverflow.com/questions/18648142/creating-brighter-color-java
-	 *
-	 * @param color    Color to make brighten.
-	 * @param fraction Darkness fraction.
-	 * @return Lighter color.
+	 * @param color
+	 * @return
 	 */
-	public static Color brighten(Color color, double fraction) {
+	private static boolean hardtosee(Color color) {
+		int red = color.getRed();
+		int green = color.getGreen();
+		int blue = color.getBlue();
 
-		int red = (int) Math.round(Math.min(255, color.getRed() + 255 * fraction));
-		int green = (int) Math.round(Math.min(255, color.getGreen() + 255 * fraction));
-		int blue = (int) Math.round(Math.min(255, color.getBlue() + 255 * fraction));
-
-		int alpha = color.getAlpha();
-
-		return new Color(red, green, blue, alpha);
+		int avg = (red + blue + green) / 3;
+		
+		if (avg > 200) return true;
+		return false;
 	}
 
 	/**
@@ -161,6 +179,11 @@ public class BoardView extends JPanel implements IGameView {
 
 		int container = Math.min(width, height);
 		return (container - 2 * PADDING) / this.controller.size();
+	}
+
+	@Override
+	public void update() {
+		this.repaint();
 	}
 
 }

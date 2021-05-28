@@ -35,28 +35,29 @@ public class GameView extends JPanel implements IGameView {
 		// Layout
 		this.setLayout(new GridBagLayout());
 
+		// Status
+		this.status = new JLabel("Gomoku");
+		this.status.setFont(new Font(status.getFont().getName(), status.getFont().getStyle(), 20));
+
+		GridBagConstraints status_layout = new GridBagConstraints();
+		status_layout.gridx = 0;
+		status_layout.gridy = 0;
+		status_layout.anchor = GridBagConstraints.CENTER;
+
+		this.add(this.status, status_layout);
+
 		// Board
 		this.board = new BoardView(controller);
 
 		GridBagConstraints board_layout = new GridBagConstraints();
 		board_layout.gridx = 0;
-		board_layout.gridy = 0;
+		board_layout.gridy = 1;
 		board_layout.fill = GridBagConstraints.BOTH;
 		board_layout.weightx = 1.0;
 		board_layout.weighty = 1.0;
 
 		this.add(this.board, board_layout);
 
-		// Status
-		this.status = new JLabel();
-		this.status.setFont(new Font(status.getFont().getName(), status.getFont().getStyle(), 20));
-		this.status.setText("GOKO");
-
-		GridBagConstraints status_layout = new GridBagConstraints();
-		status_layout.gridx = 0;
-		status_layout.gridy = 1;
-		status_layout.anchor = GridBagConstraints.CENTER;
-		this.add(this.status, status_layout);
 	}
 
 	// MARK: - Accessors
@@ -69,6 +70,14 @@ public class GameView extends JPanel implements IGameView {
 	}
 
 	/**
+	 * The view itself.
+	 */
+	@Override
+	public JPanel view() {
+		return this;
+	}
+
+	/**
 	 * Returns the board view.
 	 */
 	public JPanel board() {
@@ -77,18 +86,7 @@ public class GameView extends JPanel implements IGameView {
 
 	// MARK: - Methods
 
-	@Override
-	public void repaint() {
-		super.repaint();
-
-		// Repaint the board.
-		if (this.board != null)
-			this.board.repaint();
-
-		// Display status if possible.
-		if (this.controller == null)
-			return;
-
+	public void update() {
 		// Update status
 		String message = "";
 
@@ -114,6 +112,10 @@ public class GameView extends JPanel implements IGameView {
 		}
 
 		this.status.setText(message);
-		super.repaint();
+
+		// Repaint everything.
+		this.repaint();
+		this.board.repaint();
+		this.status.repaint();
 	}
 }

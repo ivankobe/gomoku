@@ -1,7 +1,5 @@
 package controller;
 
-import javax.swing.JPanel;
-
 import logika.Igra;
 import logika.Igra.GameState;
 import logika.Igra.Field;
@@ -77,7 +75,7 @@ public class GameController implements ITurnController, IGameController {
 	}
 
 	/**
-	 * Returns the active stone integer. 
+	 * Returns the active stone integer.
 	 */
 	public Integer active() {
 		return this.active;
@@ -96,19 +94,12 @@ public class GameController implements ITurnController, IGameController {
 	public Igra.Player player() {
 		return this.game.player();
 	}
-	
+
 	/**
 	 * Returns the state of the game.
 	 */
 	public GameState state() {
 		return this.game.state();
-	}
-
-	/**
-	 * Returns the view of the game.
-	 */
-	public JPanel panel() {
-		return this.view.board();
 	}
 
 	// MARK: - Methods
@@ -118,14 +109,16 @@ public class GameController implements ITurnController, IGameController {
 	 * away control to the player until the player performs a move.
 	 */
 	private void tick() {
+		this.white.release();
+		this.black.release();
+		
 		if (this.game.state() == GameState.IN_PROGRESS) {
 			switch (this.game.player()) {
 			case Black:
-				this.white.release();
+
 				this.black.take(this);
 				break;
 			case White:
-				this.black.release();
 				this.white.take(this);
 				break;
 			}
@@ -140,7 +133,7 @@ public class GameController implements ITurnController, IGameController {
 	 */
 	public void setActive(Integer n) {
 		this.active = n;
-		this.view.repaint();
+		this.view.update();
 	}
 
 	@Override
@@ -156,7 +149,7 @@ public class GameController implements ITurnController, IGameController {
 
 		// Reset the view.
 		this.active = null;
-		this.view.repaint();
+		this.view.update();
 
 		if (successful) {
 			// Start the next turn.

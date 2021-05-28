@@ -51,11 +51,11 @@ public class GameSettingsView extends JPanel implements ActionListener {
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		GameSettings settings = controller.settings();
-		this.white = new PlayerSettingsView(settings.white);
 		this.black = new PlayerSettingsView(settings.black);
-
-		this.add(this.white);
+		this.white = new PlayerSettingsView(settings.white);
+		
 		this.add(this.black);
+		this.add(this.white);
 		
 		this.start = this.button(this, "Začni");
 	}
@@ -99,7 +99,7 @@ class PlayerSettingsView extends JPanel implements ActionListener, ColorView.Del
 
 	private JTextField name;
 	private JCheckBox computer;
-	private ColorView color;
+//	private ColorView color;
 
 	// MARK: - Constructor
 
@@ -110,7 +110,7 @@ class PlayerSettingsView extends JPanel implements ActionListener, ColorView.Del
 		FlowLayout layout = new FlowLayout();
 		this.setLayout(layout);
 
-		this.color = this.color(this, this.player.color, "Barva");
+		this.color(this, this.player.color, "Barva");
 		this.name = this.input(this, this.player.name, "Ime");
 		this.computer = this.checkbox(this, "Računalnik");
 	}

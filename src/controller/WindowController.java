@@ -1,7 +1,5 @@
 package controller;
 
-import javax.swing.JPanel;
-
 import inteligenca.Clovek;
 import inteligenca.Inteligenca;
 import logika.GameSettings;
@@ -57,16 +55,16 @@ public class WindowController implements IGameSettingsController {
 		IPlayer black = this.player(settings.black);
 
 		// Construct a game.
-		this.game = new GameController(white, black);
-		JPanel panel = this.game.panel();
+		this.game = new GameController(black, white);
+		IGameView view = this.game.view();
 
 		// Add event listeners.
-		panel.addMouseListener(white);
-		panel.addMouseMotionListener(white);
-		panel.addMouseListener(black);
-		panel.addMouseMotionListener(black);
+		view.board().addMouseListener(white);
+		view.board().addMouseMotionListener(white);
+		view.board().addMouseListener(black);
+		view.board().addMouseMotionListener(black);
 
-		this.window.setContentPane(panel);
+		this.window.setContentPane(view.view());
 		this.show();
 	}
 
